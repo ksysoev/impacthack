@@ -1,4 +1,4 @@
-import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
+import { GoogleMap, Marker, InfoWindow, useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
 
 const mapContainerStyle = {
@@ -35,7 +35,16 @@ export default function Map({ locations, selectedLocation, onLocationSelect }) {
             url: selectedLocation?.id === location.id ? '/icons/selected-pin.png' : '/icons/pin.png',
             scaledSize: size,
           }}
-        />
+        >
+          {selectedLocation?.id === location.id && (
+            <InfoWindow position={{ lat: location.latitude, lng: location.longitude }}>
+              <div>
+                <h2>{location.name}</h2>
+                <p>{location.description}</p>
+              </div>
+            </InfoWindow>
+          )}
+        </Marker>
       ))}
     </GoogleMap>
   );
