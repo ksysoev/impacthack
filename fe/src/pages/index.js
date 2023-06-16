@@ -1,3 +1,4 @@
+import LocationCard from "@/components/LocationCard";
 import { useState } from "react";
 import Map from "../components/Map";
 import Sidebar from "../components/Sidebar";
@@ -40,6 +41,7 @@ export default function Home() {
         selectedLocation={selectedLocation}
         onLocationSelect={setSelectedLocation}
       />
+      {selectedLocation ? <LocationCard location={selectedLocation} onClose={() => setSelectedLocation(null)} /> : <></>}
       <Sidebar
         locations={locations}
         selectedLocation={selectedLocation}
