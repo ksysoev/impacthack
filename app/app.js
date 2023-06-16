@@ -3,6 +3,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
+
+app.use(express.static('public'));
+app.use(bodyParser.json());
+
+
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = new Redis(redis_uri);
