@@ -5,13 +5,29 @@ const path = require('path');
 
 const app = express();
 
-app.use(express.static('public'));
 app.use(bodyParser.json());
-app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = new Redis(redis_uri);
+
+app.get('/shops', async (req, res) => {
+  try {
+    const shopIds = await redisClient.zrangebyscore('shops', '-inf', '+inf');
+    const shops = [];
+
+    for (const shopId of shopIds) {
+      const shopDetails = await redisClient.hgetall(`shop:${shopId}`);
+      shops.push(shopDetails);
+    }
+
+    res.status(200).json(shops);
+  } catch (error) {
+    console.error('Error fetching shop data:', error);
+    res.status(500).json({ error: 'Failed to fetch shop data' });
+  }
+});
 
 app.post('/shops', async (req, res) => {
   try {
