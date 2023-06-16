@@ -124,23 +124,23 @@ app.get('/search', async (req, res) => {
     const productPromises = shopIds.map(async ([shopId, distance]) => {
         const shop = parseShop(await redisClient.hgetall(`shop:${shopId}`));
         
-        // Filter by Brand
-        if (brand && !shop.brands.some(b => b.toLowerCase() === brand.toLowerCase())) {
-            return null;
-        }
-
-        // Filter by Product
-        if (product && !shop.products[product]) {
-            return null;
-        }
-
         // Filter by Pay by Card
         if (pay_by_card && !shop.pay_by_card) {
             return null;
         }
 
+         // Filter by Product
+         if (product && !shop.products[product]) {
+            return null;
+        }
+
         // Filter by Shop category and name
         if (category && category.toLowerCase() !== shop.category.toLowerCase()) {
+            return null;
+        }
+
+        // Filter by Brand
+        if (brand && !shop.brands.some(b => b.toLowerCase() === brand.toLowerCase())) {
             return null;
         }
 
