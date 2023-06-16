@@ -43,6 +43,19 @@ services:
       mode: replicated
       replicas: 1
 
+  postgres:
+    container_name: postgres
+    restart: always
+    image: postgres:alpine
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+
   prometheus-push-gateway:
     container_name: prometheus-push-gateway
     image: prom/pushgateway
