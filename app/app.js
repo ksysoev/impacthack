@@ -85,7 +85,7 @@ app.post('/shops', async (req, res) => {
 // radius (optional): The search radius in kilometers (default is 10km).
 // category (optional): The category of the shops to search for.
 // name (optional): The name of the shops to search for.
-// sortby (optional): The field to sort the search results by (default is distance).
+// sortby (optional): The field to sort the search results by, possible values distance, rating, reliability (default is distance).
 // pay_by_card (optional): Whether the shop accepts card payments.
 // product (optional): The product to search for.
 // brand (optional): The brand to search for.
