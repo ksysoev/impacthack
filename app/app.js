@@ -148,7 +148,7 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
   }
 });
 
-app.get('*', (req, res) => {
+app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
