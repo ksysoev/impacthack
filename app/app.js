@@ -2,6 +2,9 @@ const express = require('express');
 const {createClient} = require("redis");
 
 const app = express();
+
+app.use(express.static('public'))
+
 const port = process.env.APP_PORT;
 const redis_uri = process.env.REDIS_URL;
 
@@ -12,7 +15,7 @@ const client = createClient({
 client.on('error', err => console.log('Redis Client Error', err));
 (async() => { await client.connect(); })();
 
-app.get('/', async (req, res) => {
+app.get('/api/', async (req, res) => {
 	let body = '';
 	await client.set('foo', 'bar');
 	body += 'Write value "bar" to key "foo"... ';

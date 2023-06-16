@@ -15,7 +15,7 @@ services:
       - redis
     environment:
       - APP_PORT=${APP_PORT:-8000}
-      - REDIS_URL=${REDIS}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
 
   caddy:
     container_name: caddy
