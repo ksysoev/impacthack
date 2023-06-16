@@ -35,7 +35,7 @@ export default function Sidebar({
       {filteredLocations.map((location) => (
         <div
           key={location.id}
-          className={`p-4 ${
+          className={`p-4 pl-0 ${
             selectedLocation?.id === location.id ? "bg-blue-100" : ""
           }`}
           onClick={() => onLocationSelect(location)}
