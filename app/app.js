@@ -86,6 +86,10 @@ app.post('/shops', async (req, res) => {
 // category (optional): The category of the shops to search for.
 // name (optional): The name of the shops to search for.
 // sortby (optional): The field to sort the search results by (default is distance).
+// pay_by_card (optional): Whether the shop accepts card payments.
+// product (optional): The product to search for.
+// brand (optional): The brand to search for.
+
 // Response
 // The search function returns a JSON response with the following properties:
 
@@ -99,7 +103,7 @@ const sorters = {
 
 app.get('/search', async (req, res) => {
   try {
-    let { latitude, longitude , radius, category, name, sortby } = req.query;
+    let { latitude, longitude , radius, category, name, sortby, pay_by_card, product, brand } = req.query;
 
 	if (!latitude || !longitude) { 
 		res.status(400).json({ error: 'Missing latitude and/or longitude' });
@@ -118,14 +122,29 @@ app.get('/search', async (req, res) => {
     const shopIds = await redisClient.georadius('shops', longitude, latitude, radius, 'km', 'WITHDIST');
 
     const productPromises = shopIds.map(async ([shopId, distance]) => {
-        console.log('shopId', shopId);
-        console.log('distance', distance);
         const shop = parseShop(await redisClient.hgetall(`shop:${shopId}`));
         
+        // Filter by Brand
+        if (brand && !shop.brands.some(b => b.toLowerCase() === brand.toLowerCase())) {
+            return null;
+        }
+
+        // Filter by Product
+        if (product && !shop.products[product]) {
+            return null;
+        }
+
+        // Filter by Pay by Card
+        if (pay_by_card && !shop.pay_by_card) {
+            return null;
+        }
+
+        // Filter by Shop category and name
         if (category && category.toLowerCase() !== shop.category.toLowerCase()) {
             return null;
         }
 
+        // Filter by Shop name
         if (name && !name.split(' ').every(word => searchString.toLowerCase().includes(word.toLowerCase()))) {
             return null;
         }
@@ -267,6 +286,7 @@ function parseShop(rawShop) {
 	rawShop.photos = safeParseJSON(rawShop.photos) || [];
 	rawShop.products = safeParseJSON(rawShop.products) || {};
 	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
+    rawShop.brands = safeParseJSON(rawShop.brands) || [];
 
 	return rawShop;
 }

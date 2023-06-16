@@ -16,6 +16,34 @@ let categories = [
     'Car Wash'
 ];
 
+let car_brands = [
+    'Acura',
+    'Alfa Romeo',
+    'Aston Martin',
+    'Audi',
+    'Bentley',
+    'BMW',
+    'Bugatti',
+    'Buick',
+    'Cadillac',
+    'Chevrolet',
+    'Chrysler',
+    'Citroen',
+    'Dodge',
+    'Ferrari',
+    'Fiat',
+    'Ford',
+    'Geely',
+    'General Motors',
+    'GMC',
+    'Honda',
+    'Hyundai',
+    'Infiniti',
+    'Jaguar',
+    'Jeep',
+    'Kia',
+];
+
 const prductsConfig = fs.readFileSync('products.json', 'utf8');
 const products  = JSON.parse(prductsConfig);
 const productCategories = Object.keys(products);
@@ -46,7 +74,6 @@ const productCategories = Object.keys(products);
             }
 
             //Saves shop details
-
             let products = generate_random_products();
             await client.hmset('shop:' + data.google_id, {
                 shopName: data.name,
@@ -61,6 +88,8 @@ const productCategories = Object.keys(products);
                 rating: generate_random_rating(),
                 reliability: generate_random_rating(),
                 category: generate_random_category(),
+                brands: JSON.stringify(generate_random_brands()),
+                pay_by_card: Math.random() >= 0.3,
             });
 
             //Saves shop products
@@ -89,3 +118,12 @@ function generate_random_products() {
     }
     return randomProducts;
 } 
+
+function generate_random_brands() {
+    const brandCount = Math.ceil(Math.random() * 10 + 5);
+    const randomBrands = [];
+    for (let i = 0; i < brandCount; i++) {
+        randomBrands.push(car_brands[Math.floor(Math.random() * car_brands.length)]);
+    }
+    return randomBrands;
+}
