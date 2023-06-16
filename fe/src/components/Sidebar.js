@@ -2,6 +2,9 @@ import { useState } from "react";
 import SearchBar from "./SearchBar";
 import CategoryFilter from "./CategoryFilter";
 import LocationCard from "./LocationCard";
+import Chevron from "../../public/icons/chevron.png";
+import LeftChevron from "../../public/icons/left-chevron.png";
+import Image from "next/image";
 
 export default function Sidebar({
   locations,
@@ -10,10 +13,16 @@ export default function Sidebar({
 }) {
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const categories = [
     ...new Set(locations.flatMap((location) => location.categories)),
   ];
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
 
   const filteredLocations = locations.filter(
     (location) =>
@@ -22,7 +31,7 @@ export default function Sidebar({
   );
 
   return (
-    <div className="absolute top-0 right-0 h-screen w-80 bg-white text-black p-4 overflow-auto shadow-lg">
+    <div className="absolute top-0 left-0 h-screen w-80 bg-white text-black p-4 overflow-auto shadow-lg z-20">
       <SearchBar
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
@@ -44,8 +53,16 @@ export default function Sidebar({
           <p className="mt-2 text-black">{location.description}</p>
         </div>
       ))}
-
-      {selectedLocation && <LocationCard location={selectedLocation} />}
+      {/* <button
+        className="px-2 py-1 bg-blue-500 text-white rounded-lg absolute bottom- right-0 mb-4 mr-4"
+        onClick={toggleSidebar}
+      >
+        {isOpen ? (
+          <Image width={16} height={16} src={LeftChevron} />
+        ) : (
+          <Image width={16} height={16} src={Chevron} />
+        )}
+      </button> */}
     </div>
   );
 }

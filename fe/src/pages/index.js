@@ -2,6 +2,8 @@ import LocationCard from "@/components/LocationCard";
 import { useState } from "react";
 import Map from "../components/Map";
 import Sidebar from "../components/Sidebar";
+import Head from "next/head";
+import Script from "next/script";
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -35,18 +37,35 @@ export default function Home() {
   ];
 
   return (
-    <div className="relative h-screen">
-      <Map
-        locations={locations}
-        selectedLocation={selectedLocation}
-        onLocationSelect={setSelectedLocation}
-      />
-      {selectedLocation ? <LocationCard location={selectedLocation} onClose={() => setSelectedLocation(null)} /> : <></>}
-      <Sidebar
-        locations={locations}
-        selectedLocation={selectedLocation}
-        onLocationSelect={setSelectedLocation}
-      />
-    </div>
+    <>
+      <Head>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap`}
+          strategy="beforeInteractive"
+        />
+      </Head>
+      <div className="relative h-screen">
+        <Sidebar
+          locations={locations}
+          selectedLocation={selectedLocation}
+          onLocationSelect={setSelectedLocation}
+        />
+        {selectedLocation ? (
+          <LocationCard
+            location={selectedLocation}
+            onClose={() => setSelectedLocation(null)}
+          />
+        ) : (
+          <></>
+        )}
+        <div className="container">
+          <Map
+            locations={locations}
+            selectedLocation={selectedLocation}
+            onLocationSelect={setSelectedLocation}
+          />
+        </div>
+      </div>
+    </>
   );
 }

@@ -1,5 +1,7 @@
 import { GoogleMap, Marker, InfoWindow, useLoadScript } from '@react-google-maps/api';
 import { useState, useEffect } from 'react';
+import SelectedPin from '../../public/icons/selected-pin.png';
+import Pin from '../../public/icons/pin.png';
 
 const mapContainerStyle = {
   width: '100vw',
@@ -13,7 +15,8 @@ export default function Map({ locations, selectedLocation, onLocationSelect }) {
     : { lat: 5.2257767, lng: 100.4426336 }; // Default center is Malaysia
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+    // Change this
+    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA",
   });
 
   useEffect(() => {
@@ -25,17 +28,19 @@ export default function Map({ locations, selectedLocation, onLocationSelect }) {
   if (!isLoaded) return "Loading Maps";
 
   return (
-    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
+    <GoogleMap className="overflow-hidden" mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
       {locations.map(location => (
         <Marker
+        
           key={location.id}
           position={{ lat: location.latitude, lng: location.longitude }}
           onClick={() => onLocationSelect(location)}
           icon={{
-            url: selectedLocation?.id === location.id ? '/icons/selected-pin.png' : '/icons/pin.png',
+            url: selectedLocation?.id === location.id ? `${SelectedPin}` : `${Pin}`,
             scaledSize: size,
           }}
         >
+          {console.log({ lat: location.latitude, lng: location.longitude })}
           {selectedLocation?.id === location.id && (
             <InfoWindow position={{ lat: location.latitude, lng: location.longitude }}>
               <div>
