@@ -1,0 +1,79 @@
+version: '3.9'
+
+services:
+  express:
+    container_name: express
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./app:/usr/src/app"
+    depends_on:
+      - redis
+    environment:
+      - APP_PORT=${APP_PORT:-8000}
+      - REDIS_URL=${REDIS}
+
+  caddy:
+    container_name: caddy
+    restart: unless-stopped
+    build:
+      context: ./caddy
+      dockerfile: ./Dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./data/caddy_data:/data
+      - ./data/caddy_config:/config
+    depends_on:
+      - express
+    environment:
+      PROXY_BACKEND: ${PROXY_BACKEND}
+      PROXY_PORT: ${PROXY_PORT}
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  prometheus-push-gateway:
+    container_name: prometheus-push-gateway
+    image: prom/pushgateway
+    ports:
+      - 9091:9091
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+
+volumes:
+  prom_data:
+  caddy_data:
+  caddy_config:
