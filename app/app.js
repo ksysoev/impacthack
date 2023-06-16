@@ -4,14 +4,24 @@ const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
-
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = new Redis(redis_uri);
 
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Helper function to parse JSON safely
+function safeParseJSON(jsonString) {
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return [];
+  }
+}
+
+// Fetch all shops
 app.get('/shops', async (req, res) => {
   try {
     const shopIds = await redisClient.zrangebyscore('shops', '-inf', '+inf');
@@ -19,6 +29,7 @@ app.get('/shops', async (req, res) => {
 
     for (const shopId of shopIds) {
       const shopDetails = await redisClient.hgetall(`shop:${shopId}`);
+      shopDetails.products = safeParseJSON(shopDetails.products);
       shops.push(shopDetails);
     }
 
@@ -29,6 +40,7 @@ app.get('/shops', async (req, res) => {
   }
 });
 
+// Register a new shop
 app.post('/shops', async (req, res) => {
   try {
     const { shopId, shopName, latitude, longitude, products } = req.body;
@@ -43,8 +55,13 @@ app.post('/shops', async (req, res) => {
     };
     await redisClient.hset(`shop:${shopId}`, shopDetails);
 
-    const categories = products.map((product) => product.category);
-    await redisClient.sadd('categories', ...categories);
+    await redisClient.zadd('shopNames', 0, shopName.toLowerCase());
+
+    const categories = [...new Set(products.map((product) => product.category))];
+    for (const category of categories) {
+      await redisClient.sadd('categories', category);
+      await redisClient.sadd(`shop:${shopId}:categories`, category);
+    }
 
     res.status(201).json({ message: 'Shop registered successfully' });
   } catch (error) {
@@ -53,10 +70,11 @@ app.post('/shops', async (req, res) => {
   }
 });
 
+// Search shops by product name
 app.get('/search/:productName', async (req, res) => {
   try {
-    const { productName, carModel, category } = req.params;
-    const { minRating, minReliability } = req.query;
+    const { productName } = req.params;
+    const { carModel, category, minRating, minReliability } = req.query;
 
     const shopIds = await redisClient.zrangebyscore('shops', '-inf', '+inf');
 
@@ -65,20 +83,21 @@ app.get('/search/:productName', async (req, res) => {
       const productsJSON = await redisClient.hget(`shop:${shopId}`, 'products');
       const rating = await redisClient.hget(`shop:${shopId}`, 'rating');
       const reliability = await redisClient.hget(`shop:${shopId}`, 'reliability');
-      const shopCategory = await redisClient.hget(`shop:${shopId}`, 'category');
+      const shopCategories = await redisClient.smembers(`shop:${shopId}:categories`);
 
-      const products = JSON.parse(productsJSON);
+      const products = safeParseJSON(productsJSON) || [];
 
       const matchingProducts = products.filter((product) =>
-        typeof product === 'string' && product.toLowerCase().includes(productName.toLowerCase())
+        typeof product === 'object' &&
+        product.name.toLowerCase().includes(productName.toLowerCase())
       );
 
       if (
         matchingProducts.length > 0 &&
         (!minRating || rating >= minRating) &&
         (!minReliability || reliability >= minReliability) &&
-        (!carModel || shopCategory.toLowerCase() === carModel.toLowerCase()) &&
-        (!category || shopCategory.toLowerCase() === category.toLowerCase())
+        (!carModel || shopCategories.includes(carModel.toLowerCase())) &&
+        (!category || shopCategories.includes(category.toLowerCase()))
       ) {
         const geoposResponse = await redisClient.geopos('shops', shopId);
         const [longitude, latitude] = geoposResponse[0] || [];
@@ -90,7 +109,7 @@ app.get('/search/:productName', async (req, res) => {
           products: matchingProducts,
           rating: rating || 0,
           reliability: reliability || 0,
-          category: shopCategory || '',
+          categories: shopCategories,
         };
       } else {
         return null;
@@ -100,25 +119,30 @@ app.get('/search/:productName', async (req, res) => {
     const results = await Promise.all(productPromises);
     const matchingShops = results.filter((result) => result !== null);
 
-    res.status(200).json({ matchingShops });
+    // autocomplete
+    const autoCompleteResults = [...new Set(results.flatMap((result) => result?.products?.map((p) => p.name)))];
+
+    res.status(200).json({ matchingShops, autoCompleteResults });
   } catch (error) {
     console.error('Error searching for shops:', error);
     res.status(500).json({ error: 'Failed to search for shops' });
   }
 });
 
+// Get categories for a shop
 app.get('/shop/:shopId/categories', async (req, res) => {
   try {
     const { shopId } = req.params;
-    const productCategories = await redisClient.hgetall(`shop:${shopId}:products`);
+    const categories = await redisClient.smembers(`shop:${shopId}:categories`);
 
-    res.status(200).json({ productCategories });
+    res.status(200).json({ categories });
   } catch (error) {
-    console.error('Error retrieving product categories:', error);
-    res.status(500).json({ error: 'Failed to retrieve product categories' });
+    console.error('Error retrieving categories:', error);
+    res.status(500).json({ error: 'Failed to retrieve categories' });
   }
 });
 
+// Get all categories
 app.get('/categories', async (req, res) => {
   try {
     const categories = await redisClient.smembers('categories');
@@ -130,6 +154,7 @@ app.get('/categories', async (req, res) => {
   }
 });
 
+// Get shops within a certain range
 app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
   try {
     const { latitude, longitude, radius } = req.params;
@@ -141,9 +166,9 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
       const productsJSON = await redisClient.hget(`shop:${shopId}`, 'products');
       const rating = await redisClient.hget(`shop:${shopId}`, 'rating');
       const reliability = await redisClient.hget(`shop:${shopId}`, 'reliability');
-      const shopCategory = await redisClient.hget(`shop:${shopId}`, 'category');
+      const shopCategories = await redisClient.smembers(`shop:${shopId}:categories`);
 
-      const products = JSON.parse(productsJSON);
+      const products = safeParseJSON(productsJSON) || [];
 
       shops.push({
         shopId,
@@ -152,7 +177,7 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
         products,
         rating: rating || 0,
         reliability: reliability || 0,
-        category: shopCategory || '',
+        categories: shopCategories,
         distance: Number(distance),
       });
     }
@@ -164,10 +189,12 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
   }
 });
 
+// Serve the home page
 app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Start the server
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
