@@ -23,7 +23,7 @@ export default function Home() {
       name: "Location 2",
       description: "Description 2",
       latitude: 5.2257767,
-      longitude: 100.4426336,
+      longitude: 100.4466336,
       categories: ["Category 2", "Category 3"],
     },
     {
@@ -31,7 +31,7 @@ export default function Home() {
       name: "Location 3",
       description: "Description 3",
       latitude: 5.2257767,
-      longitude: 100.4426336,
+      longitude: 100.4486336,
       categories: ["Category 1", "Category 3"],
     },
   ];
