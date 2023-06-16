@@ -1,0 +1,90 @@
+{
+    "Engine Components": [
+      "Engine Block",
+      "Cylinder Head",
+      "Pistons",
+      "Crankshaft",
+      "Camshaft",
+      "Timing Belt or Chain",
+      "Valves",
+      "Intake Manifold",
+      "Exhaust Manifold",
+      "Fuel Injectors",
+      "Spark Plugs",
+      "Ignition Coil"
+    ],
+    "Electrical Components": [
+      "Battery",
+      "Alternator",
+      "Starter Motor",
+      "Wiring Harness",
+      "Fuses",
+      "Relays",
+      "Switches",
+      "Lights (Headlights, Taillights, Turn Signals)",
+      "Sensors (Oxygen Sensor, Mass Air Flow Sensor, etc.)"
+    ],
+    "Transmission and Drivetrain Components": [
+      "Transmission (Automatic, Manual)",
+      "Clutch (in manual transmissions)",
+      "Driveshaft",
+      "Differential",
+      "Axles",
+      "CV Joints",
+      "Transfer Case (in 4WD/AWD vehicles)"
+    ],
+    "Suspension and Steering Components": [
+      "Shock Absorbers",
+      "Struts",
+      "Springs",
+      "Control Arms",
+      "Ball Joints",
+      "Tie Rod Ends",
+      "Steering Rack",
+      "Power Steering Pump",
+      "Steering Column"
+    ],
+    "Braking System Components": [
+      "Brake Pads",
+      "Brake Discs/Rotors",
+      "Brake Calipers",
+      "Brake Lines",
+      "Brake Master Cylinder",
+      "Brake Booster",
+      "ABS (Anti-lock Braking System) Components"
+    ],
+    "Exhaust System Components": [
+      "Exhaust Manifold",
+      "Catalytic Converter",
+      "Muffler",
+      "Exhaust Pipes",
+      "O2 Sensors"
+    ],
+    "Cooling System Components": [
+      "Radiator",
+      "Water Pump",
+      "Thermostat",
+      "Cooling Fan",
+      "Hoses",
+      "Heater Core"
+    ],
+    "Fuel System Components": [
+      "Fuel Tank",
+      "Fuel Pump",
+      "Fuel Filter",
+      "Fuel Injectors",
+      "Throttle Body"
+    ],
+    "Interior and Exterior Components": [
+      "Seats",
+      "Dashboard",
+      "Instrument Cluster",
+      "HVAC System",
+      "Door Panels",
+      "Windows and Windshields",
+      "Mirrors",
+      "Bumpers",
+      "Grille",
+      "Exterior Trim"
+    ]
+  }
