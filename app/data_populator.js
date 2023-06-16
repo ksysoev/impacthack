@@ -35,12 +35,26 @@ const productCategories = Object.keys(products);
             let data = all_data[i];
 
             await client.geoadd('shops', data.longitude, data.latitude, data.google_id);
+            
+            let photos = []
+            if (data.photo) {
+                photos.push(data.photo);
+            }
+
+            if (data.street_view) {
+                photos.push(data.street_view);
+            }
 
             //Saves shop details
             await client.hmset('shop:' + data.google_id, {
                 shopName: data.name,
                 latitude: data.latitude,
                 longitude: data.longitude,
+                photos: JSON.stringify(photos),
+                address: data.full_address,
+                working_hours: data.working_hours,
+                phone: data.phone,
+                logo: data.logo,
                 rating: generate_random_rating(),
                 reliability: generate_random_rating(),
                 category: generate_random_category(),
