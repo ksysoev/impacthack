@@ -65,6 +65,7 @@ const productCategories = Object.keys(products);
 
             //Saves shop products
             await client.hmset('shop:' + data.google_id + ':products', products);
+            await client.zadd('shopNames', 0, data.name.toLowerCase());
         }
         client.quit();
     });

@@ -13,12 +13,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper function to parse JSON safely
 function safeParseJSON(jsonString) {
-  try {
-    return JSON.parse(jsonString);
-  } catch (error) {
-    console.error('Error parsing JSON:', error);
-    return [];
-  }
+    if (!jsonString) {
+      return;
+    }
+
+    try {
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error('Error parsing JSON:', error, jsonString);
+        return;
+    }
 }
 
 // Fetch all shops
@@ -66,6 +70,77 @@ app.post('/shops', async (req, res) => {
   } catch (error) {
     console.error('Error registering shop:', error);
     res.status(500).json({ error: 'Failed to register shop' });
+  }
+});
+
+
+
+// The search function is an controller that searches for shops based on the specified search criteria.
+
+// Request
+// The search function expects a GET request with the following query parameters:
+
+// latitude (required): The latitude of the user's location.
+// longitude (required): The longitude of the user's location.
+// radius (optional): The search radius in kilometers (default is 10km).
+// category (optional): The category of the shops to search for.
+// name (optional): The name of the shops to search for.
+// sortby (optional): The field to sort the search results by (default is distance).
+// Response
+// The search function returns a JSON response with the following properties:
+
+// shops: An array of shop objects that match the search criteria.
+
+const sorters = {
+    'distance': (a, b) => a.distance - b.distance,
+    'rating': (a, b) => b.shop.rating - a.shop.rating,
+    'reliability': (a, b) => b.shop.reliability - a.shop.reliability,
+};
+
+app.get('/search', async (req, res) => {
+  try {
+    let { latitude, longitude , radius, category, name, sortby } = req.query;
+
+	if (!latitude || !longitude) { 
+		res.status(400).json({ error: 'Missing latitude and/or longitude' });
+		return;
+	}
+
+	radius = radius || 10; //default radius is 10km
+
+    sortby = sortby || 'distance';
+
+    if (!sorters[sortby]) {
+        res.status(400).json({ error: 'Invalid sortby parameter' });
+        return;
+    }
+
+    const shopIds = await redisClient.georadius('shops', longitude, latitude, radius, 'km', 'WITHDIST');
+
+    const productPromises = shopIds.map(async ([shopId, distance]) => {
+        console.log('shopId', shopId);
+        console.log('distance', distance);
+        const shop = parseShop(await redisClient.hgetall(`shop:${shopId}`));
+        
+        if (category && category.toLowerCase() !== shop.category.toLowerCase()) {
+            return null;
+        }
+
+        if (name && !name.split(' ').every(word => searchString.toLowerCase().includes(word.toLowerCase()))) {
+            return null;
+        }
+	
+        return { shop, distance };
+    });
+
+    const results = (await Promise.all(productPromises)).filter((result) => result !== null);
+
+    results.sort(sorters[sortby]).map((result) => result.shop);
+
+    res.status(200).json({ shops: results });
+  } catch (error) {
+    console.error('Error searching for shops:', error);
+    res.status(500).json({ error: 'Failed to search for shops' });
   }
 });
 
@@ -189,9 +264,9 @@ app.listen(port, () => {
 // Helper functions
 
 function parseShop(rawShop) {
-	rawShop.photos = safeParseJSON(rawShop.photos);
-	rawShop.products = safeParseJSON(rawShop.products);
-	rawShop.working_hours = safeParseJSON(rawShop.working_hours);
+	rawShop.photos = safeParseJSON(rawShop.photos) || [];
+	rawShop.products = safeParseJSON(rawShop.products) || {};
+	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
 
 	return rawShop;
 }
