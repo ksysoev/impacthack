@@ -6,46 +6,74 @@ const mapContainerStyle = {
   height: '100vh',
 };
 
+const center = {
+  lat: 37.7749,
+  lng: -122.4194,
+};
+
+const options = {
+  disableDefaultUI: true,
+  zoomControl: true,
+};
+
 export default function Map({ locations, selectedLocation, onLocationSelect }) {
-  const [size, setSize] = useState(null);
-  const center = selectedLocation
-    ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
-    : { lat: 5.2257767, lng: 100.4426336 }; // Default center is Malaysia
+  const [markers, setMarkers] = useState([]);
+  const [selectedMarker, setSelectedMarker] = useState(null);
 
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: 'AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA', // Exposing it for dev
   });
+
+  const handleMarkerClick = (marker) => {
+    setSelectedMarker(marker);
+    onLocationSelect(marker.location); // Pass the selected location to the onLocationSelect callback
+  };
+
+  const handleInfoWindowClose = () => {
+    setSelectedMarker(null);
+    onLocationSelect(null); // Clear the selected location by passing null to the onLocationSelect callback
+  };
 
   useEffect(() => {
     if (isLoaded) {
-      setSize(new window.google.maps.Size(25, 25));
+      // Perform any additional setup or operations related to map initialization
+      setMarkers(locations.map((location) => ({
+        id: location.id,
+        position: { lat: location.latitude, lng: location.longitude },
+        location: location, // Store the location data in the marker
+      })));
     }
-  }, [isLoaded]);
+  }, [isLoaded, locations]);
 
-  if (!isLoaded) return "Loading Maps";
+  if (!isLoaded) return 'Loading Maps';
 
   return (
-    <GoogleMap mapContainerStyle={mapContainerStyle} zoom={13} center={center}>
-      {locations.map(location => (
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
+      zoom={8}
+      center={center}
+      options={options}
+      onClick={() => handleInfoWindowClose()}
+    >
+      {markers.map((marker) => (
         <Marker
-          key={location.id}
-          position={{ lat: location.latitude, lng: location.longitude }}
-          onClick={() => onLocationSelect(location)}
-          icon={{
-            url: selectedLocation?.id === location.id ? '/icons/selected-pin.png' : '/icons/pin.png',
-            scaledSize: size,
-          }}
-        >
-          {selectedLocation?.id === location.id && (
-            <InfoWindow position={{ lat: location.latitude, lng: location.longitude }}>
-              <div>
-                <h2>{location.name}</h2>
-                <p>{location.description}</p>
-              </div>
-            </InfoWindow>
-          )}
-        </Marker>
+          key={marker.id}
+          position={marker.position}
+          onClick={() => handleMarkerClick(marker)}
+        />
       ))}
+
+      {selectedMarker && (
+        <InfoWindow
+          position={selectedMarker.position}
+          onCloseClick={handleInfoWindowClose}
+        >
+          <div>
+            <h2>{selectedMarker.location.name}</h2>
+            <p>{selectedMarker.location.description}</p>
+          </div>
+        </InfoWindow>
+      )}
     </GoogleMap>
   );
 }
