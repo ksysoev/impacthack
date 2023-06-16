@@ -1,18 +1,17 @@
 const Redis = require('ioredis');
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
-
+app.use(bodyParser.json());
 
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = new Redis(redis_uri);
-
-app.use(bodyParser.json());
 
 app.post('/shops', async (req, res) => {
   try {
@@ -147,6 +146,10 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
     console.error('Error retrieving shops within range:', error);
     res.status(500).json({ error: 'Failed to retrieve shops within range' });
   }
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
