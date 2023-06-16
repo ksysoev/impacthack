@@ -46,6 +46,8 @@ const productCategories = Object.keys(products);
             }
 
             //Saves shop details
+
+            let products = generate_random_products();
             await client.hmset('shop:' + data.google_id, {
                 shopName: data.name,
                 latitude: data.latitude,
@@ -53,6 +55,7 @@ const productCategories = Object.keys(products);
                 photos: JSON.stringify(photos),
                 address: data.full_address,
                 working_hours: data.working_hours,
+                products: JSON.stringify(products),
                 phone: data.phone,
                 logo: data.logo,
                 rating: generate_random_rating(),
@@ -61,7 +64,7 @@ const productCategories = Object.keys(products);
             });
 
             //Saves shop products
-            await client.hmset('shop:' + data.google_id + ':products', generate_random_products());
+            await client.hmset('shop:' + data.google_id + ':products', products);
         }
         client.quit();
     });

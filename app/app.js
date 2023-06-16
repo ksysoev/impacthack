@@ -28,9 +28,8 @@ app.get('/shops', async (req, res) => {
     const shops = [];
 
     for (const shopId of shopIds) {
-      const shopDetails = await redisClient.hgetall(`shop:${shopId}`);
-      shopDetails.products = safeParseJSON(shopDetails.products);
-      shops.push(shopDetails);
+      let shopDetails = await redisClient.hgetall(`shop:${shopId}`);
+      shops.push(parseShop(shopDetails));
     }
 
     res.status(200).json(shops);
@@ -105,7 +104,7 @@ app.get('/search/:productName', async (req, res) => {
         return {
           shopId,
           shopName,
-          location: { latitude: latitude || 0, longitude: longitude || 0 },
+          locatios: { latitude: latitude || 0, longitude: longitude || 0 },
           products: matchingProducts,
           rating: rating || 0,
           reliability: reliability || 0,
@@ -162,24 +161,11 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
     const shops = [];
 
     for (const [shopId, distance] of shopIds) {
-      const shopName = await redisClient.hget(`shop:${shopId}`, 'name');
-      const productsJSON = await redisClient.hget(`shop:${shopId}`, 'products');
-      const rating = await redisClient.hget(`shop:${shopId}`, 'rating');
-      const reliability = await redisClient.hget(`shop:${shopId}`, 'reliability');
-      const shopCategories = await redisClient.smembers(`shop:${shopId}:categories`);
-
-      const products = safeParseJSON(productsJSON) || [];
-
-      shops.push({
-        shopId,
-        shopName,
-        location: { latitude: Number(latitude), longitude: Number(longitude) },
-        products,
-        rating: rating || 0,
-        reliability: reliability || 0,
-        categories: shopCategories,
-        distance: Number(distance),
-      });
+	  let shop = await redisClient.hget(`shop:${shopId}`);
+	  if (!shop) {
+		continue;
+	  }
+      shops.push(parseShop(shop));
     }
 
     res.status(200).json({ shops });
@@ -198,3 +184,14 @@ app.get('/home', (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+
+// Helper functions
+
+function parseShop(rawShop) {
+	rawShop.photos = safeParseJSON(rawShop.photos);
+	rawShop.products = safeParseJSON(rawShop.products);
+	rawShop.working_hours = safeParseJSON(rawShop.working_hours);
+
+	return rawShop;
+}
