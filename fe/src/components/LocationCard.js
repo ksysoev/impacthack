@@ -1,6 +1,6 @@
 import Image from "next/image";
 import close from "../../public/icons/close.png";
-// import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 // import { clearLocation } from "../store/reducers/locationSlice";
 import workshop from "../../public/images/workshop.jpg";
 import whatsapp from "../../public/icons/whatsapp.png";
