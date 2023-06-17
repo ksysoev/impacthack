@@ -36,6 +36,7 @@ bot.on('message', async (msg) => {
     let reply = 'Sorry, I did not understand your message. Please try again.';
     if (match && match[1]) {
         const category = match[1].toLowerCase() || 'other';
+        let display = '';
         switch (category) {
             case 'show':
                 reply = `Here you can see the information about the shop:\n ${printShopInformation(shopInformation)}`;
@@ -46,14 +47,16 @@ bot.on('message', async (msg) => {
                     reply = `Sorry, I did not understand your message. Please try again.`;
                     break;
                 }
+                display = printShopInformation(resp);
                 await redisClient.hmset(`shop:${shopId}`, serializeShop(resp));
-                reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${printShopInformation(resp)}`;
+                reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${display}`;
                 break;
             case 'news':
                 post = await generataPost(message, shopInformation);
                 shopInformation.posts.unshift(post);
+                display = printShopInformation(shopInformation);
                 await redisClient.hset(`shop:${shopId}`, serializeShop(shopInformation)) 
-                reply = `Thank you for your news. We posted it on our website: ${post}`;
+                reply = `Thank you for your news. We posted it on our website: ${display}`;
                 break;
             case 'request':
                 reply = `Thank you for your request. We will contact you as soon as possible.`;
@@ -197,7 +200,7 @@ function printShopInformation(shop) {
         openingHoursString += `  ${day}: ${working_hours[day]}\n`;
     }
 
-    brandsString = brands.join(', ');
+    brandsString = (brands).join(', ');
 
     return `Shop name:\n ${shopName}\n
 Address:\n ${address}\n
@@ -231,10 +234,10 @@ function safeParseJSON(jsonString) {
 }
 
 function serializeShop(shop) {
-    shop.photos = JSON.stringify(shop.photos);
-    shop.products = JSON.stringify(shop.products);
-    shop.working_hours = JSON.stringify(shop.working_hours);
-    shop.brands = JSON.stringify(shop.brands);
-    shop.posts = JSON.stringify(shop.posts);
+    shop.photos = JSON.stringify(shop.photos || []);
+    shop.products = JSON.stringify(shop.products || {});
+    shop.working_hours = JSON.stringify(shop.working_hours || {});
+    shop.brands = JSON.stringify(shop.brands || []);
+    shop.posts = JSON.stringify(shop.posts  || []);
     return shop;
 }
