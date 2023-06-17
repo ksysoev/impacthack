@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 
 export default function Feed({ onClose }) {
-  const selectedLocation = useSelector((state) => state.location);
+  const selectedLocation = useSelector((state) => state.location.location);
   const containerRef = useRef(null);
 
   useEffect(() => {
