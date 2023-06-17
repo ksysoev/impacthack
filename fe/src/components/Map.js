@@ -30,12 +30,16 @@ export default function Map({ locations, onLocationSelect }) {
     googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
   });
 
+  const [selectedMarker, setSelectedMarker] = useState(null);
+
   const handleMarkerClick = (marker) => {
+    setSelectedMarker(marker);
     dispatch(setLocation(marker.location));
     onLocationSelect(marker.location);
   };
 
   const handleInfoWindowClose = () => {
+    setSelectedMarker(null);
     dispatch(clearLocation());
     onLocationSelect(null);
   };
@@ -65,12 +69,37 @@ export default function Map({ locations, onLocationSelect }) {
     >
       {markers.map((marker) => (
         <>
-          {console.log(marker)}
           <Marker
             key={marker.id}
             position={marker.position}
             onClick={() => handleMarkerClick(marker)}
           />
+          {selectedMarker && selectedMarker.id === marker.id && (
+            <InfoWindow
+              position={marker.position}
+              onCloseClick={handleInfoWindowClose}
+            >
+              <div className="text-black w-[200px] h-auto">
+                <h3>{marker.location.name}</h3>
+                <div>
+                  <h4>Categories:</h4>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {Array.from(new Set(marker.location.categories)).map(
+                      (category) => (
+                        <p
+                          key={category}
+                          className="py-1 px-2 rounded-full text-xs font-thin bg-gray-500 text-white"
+                        >
+                          {category}
+                        </p>
+                      )
+                    )}
+                  </div>
+                </div>
+                {/* Additional information to display */}
+              </div>
+            </InfoWindow>
+          )}
         </>
       ))}
     </GoogleMap>
