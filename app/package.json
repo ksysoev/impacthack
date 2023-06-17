@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon data_populator.js && nodemon app.js",
+    "start": "node data_populator.js && nodemon app.js",
     "bot": "nodemon telegram_bot.js"
   },
   "dependencies": {
