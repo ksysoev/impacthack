@@ -7,6 +7,8 @@ import {
   setLocation,
   setZoomMarker,
 } from "../store/reducers/locationSlice";
+import checkmark from "../../src/assets/checkmark.svg";
+import Image from "next/image";
 
 export default function Sidebar({ locations, onLocationSelect }) {
   const [searchValue, setSearchValue] = useState("");
@@ -69,8 +71,18 @@ export default function Sidebar({ locations, onLocationSelect }) {
           }`}
           onClick={() => handleLocationSelect(location)}
         >
-          <h2 className="text-xl text-black font-bold">{location.name}</h2>
-          <p className="mt-2 text-black">{location.description}</p>
+          <h2 className="text-xl text-black font-bold flex">
+            {location.name}
+            {location.reliability > 3 ? (
+              <Image src={checkmark} height={25} width={25} />
+            ) : (
+              ""
+            )}
+          </h2>
+          <p className="mt-2 text-black">
+            {location.description}
+            {console.log(location)}
+          </p>
         </div>
       ))}
     </div>

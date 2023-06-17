@@ -29,7 +29,7 @@ export default function Feed({ onClose }) {
     <>
       {selectedLocation.posts.length > 0 && (
         <div
-          className="absolute top-0 right-0 w-96 p-2 overflow-hidden z-20"
+          className="absolute top-0 right-0 w-96 p-2 overflow-hidden z-1000"
           onClick={(event) => event.stopPropagation()}
         >
           <div
