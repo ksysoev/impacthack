@@ -16,6 +16,16 @@ const mapContainerStyle = {
 const options = {
   disableDefaultUI: true,
   zoomControl: true,
+  styles: [
+    {
+      featureType: "poi",
+      stylers: [
+        {
+          visibility: "off",
+        },
+      ],
+    },
+  ],
 };
 
 export default function Map({ locations, onLocationSelect }) {
@@ -24,8 +34,7 @@ export default function Map({ locations, onLocationSelect }) {
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
-    : { lat: 5.2257767, lng: 100.4426336 }; // Default center is Malaysia
-
+    : { lat: 5.2257767, lng: 100.4426336 };
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
   });
