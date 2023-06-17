@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://157.245.51.217:8000/shops");
+        const response = await fetch("https://ocrtynfrqk.execute-api.ap-southeast-1.amazonaws.com/dev");
         const data = await response.json();
         const categoryMapping = {
           "Suspension and Steering Components": "Suspension",
