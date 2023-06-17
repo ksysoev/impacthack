@@ -9,7 +9,7 @@ export default function Sidebar({ locations, onLocationSelect }) {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const dispatch = useDispatch();
-  const selectedLocation = useSelector((state) => state.location);
+  const selectedLocation = useSelector((state) => state.vroom.location);
 
   const categories = [
     ...new Set(locations.flatMap((location) => location.categories)),

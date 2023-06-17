@@ -3,7 +3,7 @@ import locationReducer from "./reducers/locationSlice";
 
 const store = configureStore({
   reducer: {
-    location: locationReducer,
+    vroom: locationReducer,
   },
 });
 

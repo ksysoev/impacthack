@@ -30,7 +30,7 @@ const options = {
 
 export default function Map({ locations, onLocationSelect }) {
   const dispatch = useDispatch();
-  const selectedLocation = useSelector((state) => state.location.location);
+  const selectedLocation = useSelector((state) => state.vroom.location);
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }

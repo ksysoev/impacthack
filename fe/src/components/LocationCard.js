@@ -3,7 +3,7 @@ import close from "../../public/icons/close.png";
 import { useSelector } from "react-redux";
 
 export default function LocationCard({ onClose }) {
-  const selectedLocation = useSelector((state) => state.location.location);
+  const selectedLocation = useSelector((state) => state.vroom.location);
   const daysOfWeek = [
     "Sunday",
     "Monday",

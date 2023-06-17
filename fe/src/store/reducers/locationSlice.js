@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const locationSlice = createSlice({
-  name: "location",
+  name: "vroom",
   initialState: {
     location: null,
-    zoomMarker: null,
+    zoomMarker: 12,
   },
   reducers: {
     setLocation: (state, action) => {
