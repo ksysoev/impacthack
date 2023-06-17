@@ -273,7 +273,7 @@ Website:\n ${website || 'not provided'}\n
 Opening hours:\n ${openingHoursString}\n
 Brands:\n ${brandsString}\n
 Can pay with card:\n ${pay_by_card ? 'Yes' : 'No'}`;
-}j
+}
 
 function parseShop(rawShop) {
     rawShop.photos = safeParseJSON(rawShop.photos) || [];
