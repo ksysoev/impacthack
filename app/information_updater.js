@@ -2,7 +2,12 @@ const axios = require('axios');
 const apiKey = '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';
 
 async function parseResponse(response, currentStructure) {
-    const message = `Parse the following response and add new information into existing structure. you MUST use only existing fields from provided sturcture\n\n Response:\n\n${response}\n\n Structure: ${currentStructure}`;
+    const message = `Parse the following response and add new information into existing structure. 
+    you MUST use only existing fields from provided sturcture
+    If new address was provided partially, you must use missed information from providede structure
+    
+    Response:\n\n${response}\n\n 
+    Structure: ${currentStructure}`;
 
     const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
         messages: [{"role": "user", "content": message}],
