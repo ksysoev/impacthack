@@ -266,13 +266,13 @@ function printShopInformation(shop) {
 
     brandsString = (brands).join(', ');
 
-    return `Shop name:\n\n ${shopName}\n\n
-Address:\n\n ${address}\n\n
-Phone number:\n\n ${phone || 'not provided'}\n\n
-Website:\n\n ${website || 'not provided'}\n\n
-Opening hours:\n\n ${openingHoursString}\n\n
-Brands:\n\n ${brandsString}\n\n
-Can pay with card:\n\n ${pay_by_card ? 'Yes' : 'No'}`;
+    return `Shop name:\n ${shopName}\n\n
+Address:\n ${address}\n\n
+Phone number:\n ${phone || 'not provided'}\n\n
+Website:\n ${website || 'not provided'}\n\n
+Opening hours:\n ${openingHoursString}\n\n
+Brands:\n ${brandsString}\n\n
+Can pay with card:\n ${pay_by_card ? 'Yes' : 'No'}`;
 }
 
 function parseShop(rawShop) {
