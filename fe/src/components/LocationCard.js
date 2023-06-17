@@ -32,17 +32,21 @@ export default function LocationCard({ onClose }) {
     const workingHours = selectedLocation.working_hours[currentDay];
 
     if (workingHours) {
-      const [openingHour, closingHour] = workingHours.split("-");
-      const openingTime = parseInt(openingHour.split(":")[0]);
-      const closingTime = parseInt(closingHour.split(":")[0]);
+      if (workingHours !== "Open 24 hours") {
+        const [openingHour, closingHour] = workingHours.split("-");
+        const openingTime = parseInt(openingHour.split(":")[0]);
+        const closingTime = parseInt(closingHour.split(":")[0]);
 
-      if (currentHour >= openingTime && currentHour < closingTime) {
-        return ["Open", workingHours];
+        if (currentHour >= openingTime && currentHour < closingTime) {
+          return ["Open", workingHours];
+        } else {
+          return ["Closed", workingHours];
+        }
+      } else if (workingHours === "Open 24 hours") {
+        return "Open 24 Hours";
       } else {
-        return ["Closed", workingHours];
+        return "Closed";
       }
-    } else {
-      return "Closed";
     }
   };
 
@@ -74,16 +78,32 @@ export default function LocationCard({ onClose }) {
             </p>
           ))}
         </div>
-        <div className="mt-4">
-          <h3 className="text-lg text-black font-bold mb-2">Working Hours</h3>
-          <p className="text-black">
-            {currentWorkingHours[0] === "Open" ? (
-              <span className="text-green-500">{currentWorkingHours[0]}</span>
-            ) : (
-              <span className="text-red-500">{currentWorkingHours[0]}</span>
-            )}&nbsp;-&nbsp;<span>{currentWorkingHours[1]}</span>
-          </p>
-        </div>
+        {}
+        {selectedLocation.working_hours && (
+          <div className="mt-4">
+            <h3 className="text-lg text-black font-bold mb-2">Working Hours</h3>
+            <p className="text-black">
+              {Array.isArray(currentWorkingHours) ? (
+                <>
+                  {currentWorkingHours[0] === "Open" ? (
+                    <span className="text-green-500">
+                      {currentWorkingHours[0]}
+                    </span>
+                  ) : (
+                    <span className="text-red-500">
+                      {currentWorkingHours[0]}
+                    </span>
+                  )}
+                  &nbsp;-&nbsp;<span>{currentWorkingHours[1]}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-green-500">{currentWorkingHours}</span>
+                </>
+              )}
+            </p>
+          </div>
+        )}
         <div className="mt-4">
           <h3 className="text-lg text-black font-bold mb-2">Store Links</h3>
           <a
