@@ -2,7 +2,11 @@ import { useState } from "react";
 import SearchBar from "./SearchBar";
 import CategoryFilter from "./CategoryFilter";
 import { useDispatch, useSelector } from "react-redux";
-import { clearLocation, setLocation, setZoomMarker } from "../store/reducers/locationSlice";
+import {
+  clearLocation,
+  setLocation,
+  setZoomMarker,
+} from "../store/reducers/locationSlice";
 
 export default function Sidebar({ locations, onLocationSelect }) {
   const [searchValue, setSearchValue] = useState("");
@@ -19,20 +23,31 @@ export default function Sidebar({ locations, onLocationSelect }) {
   const handleLocationSelect = (location) => {
     if (selectedLocation?.id === location.id) {
       dispatch(clearLocation());
-      dispatch(setZoomMarker(13))
+      dispatch(setZoomMarker(13));
       onLocationSelect(null);
     } else {
-      dispatch(setZoomMarker(16))
+      dispatch(setZoomMarker(16));
       dispatch(setLocation(location));
       onLocationSelect(location);
     }
   };
 
-  const filteredLocations = locations.filter(
-    (location) =>
-      location.name.toLowerCase().includes(searchValue.toLowerCase()) &&
+  const searchWords = searchValue.toLowerCase().split(" ");
+
+  const filteredLocations = locations.filter((location) => {
+    const locationString = [
+      location.name,
+      location.description,
+      ...location.categories,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      searchWords.every((word) => locationString.includes(word)) &&
       (!selectedCategory || location.categories.includes(selectedCategory))
-  );
+    );
+  });
 
   return (
     <div className="absolute top-0 left-0 h-screen w-96 bg-white text-black p-4 overflow-auto shadow-lg z-20">
