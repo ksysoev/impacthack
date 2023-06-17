@@ -4,7 +4,7 @@ const locationSlice = createSlice({
   name: "vroom",
   initialState: {
     location: null,
-    zoomMarker: 12,
+    zoomMarker: 13,
   },
   reducers: {
     setLocation: (state, action) => {

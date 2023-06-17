@@ -2,7 +2,7 @@ import { useState } from "react";
 import SearchBar from "./SearchBar";
 import CategoryFilter from "./CategoryFilter";
 import { useDispatch, useSelector } from "react-redux";
-import { clearLocation, setLocation } from "../store/reducers/locationSlice";
+import { clearLocation, setLocation, setZoomMarker } from "../store/reducers/locationSlice";
 
 export default function Sidebar({ locations, onLocationSelect }) {
   const [searchValue, setSearchValue] = useState("");
@@ -10,6 +10,7 @@ export default function Sidebar({ locations, onLocationSelect }) {
 
   const dispatch = useDispatch();
   const selectedLocation = useSelector((state) => state.vroom.location);
+  const zoomMarker = useSelector((state) => state.vroom.zoomMarker);
 
   const categories = [
     ...new Set(locations.flatMap((location) => location.categories)),
@@ -18,8 +19,10 @@ export default function Sidebar({ locations, onLocationSelect }) {
   const handleLocationSelect = (location) => {
     if (selectedLocation?.id === location.id) {
       dispatch(clearLocation());
+      dispatch(setZoomMarker(13))
       onLocationSelect(null);
     } else {
+      dispatch(setZoomMarker(16))
       dispatch(setLocation(location));
       onLocationSelect(location);
     }

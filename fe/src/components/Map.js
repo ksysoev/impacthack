@@ -6,7 +6,7 @@ import {
 } from "@react-google-maps/api";
 import { useState, useEffect} from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setLocation, clearLocation } from "@/store/reducers/locationSlice";
+import { setLocation,setZoomMarker, clearLocation } from "@/store/reducers/locationSlice";
 
 const mapContainerStyle = {
   width: "auto",
@@ -31,6 +31,8 @@ const options = {
 export default function Map({ locations, onLocationSelect }) {
   const dispatch = useDispatch();
   const selectedLocation = useSelector((state) => state.vroom.location);
+  const zoomMarker = useSelector((state) => state.vroom.zoomMarker);
+
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
@@ -44,12 +46,12 @@ export default function Map({ locations, onLocationSelect }) {
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
     dispatch(setLocation(marker.location));
+    dispatch(setZoomMarker(16))
     onLocationSelect(marker.location);
   };
 
   const handleInfoWindowClose = () => {
     setSelectedMarker(null);
-    dispatch(clearLocation());
     onLocationSelect(null);
   };
 
@@ -71,7 +73,7 @@ export default function Map({ locations, onLocationSelect }) {
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
-      zoom={12}
+      zoom={zoomMarker}
       center={center}
       options={options}
       onClick={handleInfoWindowClose}
