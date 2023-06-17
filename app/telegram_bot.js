@@ -56,7 +56,7 @@ bot.on('message', async (msg) => {
                 shopInformation.posts.unshift(post);
                 display = printShopInformation(shopInformation);
                 await redisClient.hset(`shop:${shopId}`, serializeShop(shopInformation)) 
-                reply = `Thank you for your news. We posted it on our website: ${display}`;
+                reply = `Thank you for your news. We posted it on our website:\n\n ${post}`;
                 break;
             case 'request':
                 reply = `Thank you for your request. We will contact you as soon as possible.`;
