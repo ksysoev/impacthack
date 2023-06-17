@@ -32,10 +32,10 @@ export default function LocationCard({ onClose }) {
     const workingHours = selectedLocation.working_hours[currentDay];
 
     if (workingHours) {
-      if (workingHours !== "Open 24 hours") {
+      if (workingHours !== "Open 24 hours" && workingHours !== "Closed") {
         const [openingHour, closingHour] = workingHours.split("-");
-        const openingTime = parseInt(openingHour.split(":")[0]);
-        const closingTime = parseInt(closingHour.split(":")[0]);
+        const openingTime = parseInt(openingHour.split(" ")[0]); // Split by non-breaking space
+        const closingTime = parseInt(closingHour.split(" ")[0]); // Split by non-breaking space
 
         if (currentHour >= openingTime && currentHour < closingTime) {
           return ["Open", workingHours];
@@ -47,9 +47,10 @@ export default function LocationCard({ onClose }) {
       } else {
         return "Closed";
       }
+    } else {
+      return "Closed"; // Default to "Closed" if there are no working hours for the current day
     }
   };
-
   const currentWorkingHours = getCurrentWorkingHours();
 
   return (
@@ -98,7 +99,13 @@ export default function LocationCard({ onClose }) {
                 </>
               ) : (
                 <>
-                  <span className="text-green-500">{currentWorkingHours}</span>
+                  {currentWorkingHours === "Closed" ? (
+                    <span className="text-red-500">{currentWorkingHours}</span>
+                  ) : (
+                    <span className="text-green-500">
+                      {currentWorkingHours}
+                    </span>
+                  )}
                 </>
               )}
             </p>
