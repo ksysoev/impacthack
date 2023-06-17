@@ -257,7 +257,7 @@ async function getCoordinates(address) {
 
 // Other functions remain the same...
 function printShopInformation(shop) {
-    const { shopName, address, phoneNumber, website, working_hours, brands, pay_by_card } = shop;
+    const { shopName, address, phone, website, working_hours, brands, pay_by_card } = shop;
 
     let openingHoursString = '';
     for (const day in working_hours) {
@@ -268,7 +268,7 @@ function printShopInformation(shop) {
 
     return `Shop name: ${shopName}
 Address: ${address}
-Phone number: ${phoneNumber || 'not provided'}
+Phone number: ${phone || 'not provided'}
 Website: ${website || 'not provided'}
 Opening hours: ${openingHoursString}
 Brands: ${brandsString}
