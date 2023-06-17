@@ -38,6 +38,7 @@ export default function Sidebar({ locations, onLocationSelect }) {
     const locationString = [
       location.name,
       location.description,
+      ...location.brands,
       ...location.categories,
     ]
       .join(" ")
