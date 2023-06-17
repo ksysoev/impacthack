@@ -1,17 +1,18 @@
 import Image from "next/image";
 import close from "../../public/icons/close.png";
-import { useDispatch, useSelector } from "react-redux";
-import { clearLocation } from "../store/reducers/locationSlice";
+// import { useDispatch, useSelector } from "react-redux";
+// import { clearLocation } from "../store/reducers/locationSlice";
 import workshop from "../../public/images/workshop.jpg";
 import whatsapp from "../../public/icons/whatsapp.png";
 import messenger from "../../public/icons/messenger.png";
 
 export default function LocationCard({ onClose }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const selectedLocation = useSelector((state) => state.location);
 
-  const handleClose = () => {
-    dispatch(clearLocation());
+  const handleClose = (event) => {
+    event.stopPropagation(); // Prevent event bubbling to the map
+    // dispatch(clearLocation());
     onClose();
   };
 
@@ -22,12 +23,12 @@ export default function LocationCard({ onClose }) {
 
   const uniqueCategories = [...new Set(selectedLocation.categories)];
 
-
   return (
-    <div className="absolute top-0 left-80 h-full w-80 p-2 overflow-hidden z-20">
+    <div
+      className="absolute top-0 left-80 h-auto w-80 p-2 overflow-hidden z-20"
+      onClick={(event) => event.stopPropagation()} // Prevent map click event
+    >
       <div className="bg-white text-black rounded-lg p-5 shadow-lg h-full overflow-auto">
-        {/* <div className="absolute top-0 left-80 h-auto w-80 p-2 overflow-auto z-20">
-      <div className="bg-white text-black rounded-lg p-5 shadow-lg"> */}
         <button
           className="absolute top-0 right-0 mr-6 mt-6"
           onClick={handleClose}
@@ -59,7 +60,7 @@ export default function LocationCard({ onClose }) {
         </div>
         <div className="mt-4 w-full">
           <Image
-            className=" rounded-lg"
+            className="rounded-lg"
             src={workshop}
             alt="Store Image"
             objectFit="cover"

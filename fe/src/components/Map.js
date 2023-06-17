@@ -4,7 +4,7 @@ import {
   InfoWindow,
   useLoadScript,
 } from "@react-google-maps/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocation, clearLocation } from "@/store/reducers/locationSlice";
 
@@ -34,9 +34,9 @@ export default function Map({ locations, onLocationSelect }) {
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
-    : { lat: 3.139003, lng: 101.686855 };;
+    : { lat: 3.139003, lng: 101.686855 };
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
+    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Replace with your Google Maps API key
   });
 
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -74,7 +74,7 @@ export default function Map({ locations, onLocationSelect }) {
       zoom={12}
       center={center}
       options={options}
-      onClick={() => handleInfoWindowClose()}
+      onClick={handleInfoWindowClose}
     >
       {markers.map((marker) => (
         <>
@@ -83,7 +83,7 @@ export default function Map({ locations, onLocationSelect }) {
             position={marker.position}
             onClick={() => handleMarkerClick(marker)}
           />
-          {selectedMarker && selectedMarker.id === marker.id && (
+          {/* {selectedMarker && selectedMarker.id === marker.id && (
             <InfoWindow
               position={marker.position}
               onCloseClick={handleInfoWindowClose}
@@ -105,12 +105,17 @@ export default function Map({ locations, onLocationSelect }) {
                     )}
                   </div>
                 </div>
-                {/* Additional information to display */}
               </div>
             </InfoWindow>
-          )}
+          )} */}
         </>
       ))}
+      {selectedMarker && (
+        <Marker
+          position={selectedMarker.position}
+          onClick={handleInfoWindowClose}
+        />
+      )}
     </GoogleMap>
   );
 }
