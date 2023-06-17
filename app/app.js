@@ -9,6 +9,11 @@ const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const redisClient = new Redis(redis_uri);
 
+// Enabling CORS
+app.use(function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  next();
+});
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -157,7 +162,7 @@ app.get('/search', async (req, res) => {
 
     results.sort(sorters[sortby]).map((result) => result.shop);
 
-    res.status(200).json({ shops: results[0] });
+    res.status(200).json({ shops: results });
   } catch (error) {
     console.error('Error searching for shops:', error);
     res.status(500).json({ error: 'Failed to search for shops' });
