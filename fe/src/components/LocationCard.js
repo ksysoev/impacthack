@@ -1,32 +1,57 @@
 import Image from "next/image";
 import close from "../../public/icons/close.png";
 import { useSelector } from "react-redux";
-// import { clearLocation } from "../store/reducers/locationSlice";
-import workshop from "../../public/images/workshop.jpg";
-import whatsapp from "../../public/icons/whatsapp.png";
-import messenger from "../../public/icons/messenger.png";
 
 export default function LocationCard({ onClose }) {
-  // const dispatch = useDispatch();
   const selectedLocation = useSelector((state) => state.location);
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const currentDate = new Date();
+  const currentDay = daysOfWeek[currentDate.getUTCDay()];
+  const currentHour = currentDate.getUTCHours() + 8; // Add 8 hours to convert to GMT+8
 
   const handleClose = (event) => {
-    event.stopPropagation(); // Prevent event bubbling to the map
-    // dispatch(clearLocation());
+    event.stopPropagation();
     onClose();
   };
 
   const handleImageClick = () => {
-    // Logic to handle image click and open the popup
     console.log("Image clicked");
   };
 
   const uniqueCategories = [...new Set(selectedLocation.categories)];
 
+  const getCurrentWorkingHours = () => {
+    const workingHours = selectedLocation.working_hours[currentDay];
+
+    if (workingHours) {
+      const [openingHour, closingHour] = workingHours.split("-");
+      const openingTime = parseInt(openingHour.split(":")[0]);
+      const closingTime = parseInt(closingHour.split(":")[0]);
+
+      if (currentHour >= openingTime && currentHour < closingTime) {
+        return ["Open", workingHours];
+      } else {
+        return ["Closed", workingHours];
+      }
+    } else {
+      return "Closed";
+    }
+  };
+
+  const currentWorkingHours = getCurrentWorkingHours();
+
   return (
     <div
-      className="absolute top-0 left-80 h-auto w-80 p-2 overflow-hidden z-20"
-      onClick={(event) => event.stopPropagation()} // Prevent map click event
+      className="absolute top-0 left-96 h-auto w-96 p-2 overflow-hidden z-20"
+      onClick={(event) => event.stopPropagation()}
     >
       <div className="bg-white text-black rounded-lg p-5 shadow-lg h-full overflow-auto">
         <button
@@ -50,6 +75,16 @@ export default function LocationCard({ onClose }) {
           ))}
         </div>
         <div className="mt-4">
+          <h3 className="text-lg text-black font-bold mb-2">Working Hours</h3>
+          <p className="text-black">
+            {currentWorkingHours[0] === "Open" ? (
+              <span className="text-green-500">{currentWorkingHours[0]}</span>
+            ) : (
+              <span className="text-red-500">{currentWorkingHours[0]}</span>
+            )}&nbsp;-&nbsp;<span>{currentWorkingHours[1]}</span>
+          </p>
+        </div>
+        <div className="mt-4">
           <h3 className="text-lg text-black font-bold mb-2">Store Links</h3>
           <a
             href={selectedLocation.storeLink}
@@ -59,43 +94,12 @@ export default function LocationCard({ onClose }) {
           </a>
         </div>
         <div className="mt-4 w-full">
-          <Image
+          <img
             className="rounded-lg"
-            src={workshop}
+            src={selectedLocation.photos[0]} // Use the first photo from the photos array
             alt="Store Image"
             objectFit="cover"
           />
-        </div>
-        <div className="mt-4">
-          <h3 className="text-lg text-black font-bold mb-2">Highlights</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {[1, 2].map((image) => (
-              <div
-                key={image}
-                className="relative cursor-pointer"
-                onClick={handleImageClick}
-              >
-                <div className="absolute inset-0 bg-gray-500 opacity-20 rounded-lg" />
-
-                <Image
-                  src={`/images/${image}.jpg`}
-                  alt={`Image ${image}`}
-                  width={200}
-                  height={200}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-6">
-          <button className="flex items-center justify-center bg-blue-600 text-sm text-white px-4 py-2 rounded-lg w-full mb-2">
-            <Image src={messenger} alt="Facebook Icon" width={20} height={20} />
-            <span className="ml-2">Chat with Messenger</span>
-          </button>
-          <button className="flex items-center justify-center bg-green-500 text-sm text-white px-4 py-2 rounded-lg w-full">
-            <Image src={whatsapp} alt="WhatsApp Icon" width={20} height={20} />
-            <span className="ml-2">Chat with WhatsApp</span>
-          </button>
         </div>
       </div>
     </div>

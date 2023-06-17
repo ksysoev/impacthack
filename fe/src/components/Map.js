@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLocation, clearLocation } from "@/store/reducers/locationSlice";
 
 const mapContainerStyle = {
-  width: "100vw",
+  width: "auto",
   height: "100vh",
 };
 
@@ -75,6 +75,9 @@ export default function Map({ locations, onLocationSelect }) {
       center={center}
       options={options}
       onClick={handleInfoWindowClose}
+      styles={{
+        width: 'auto !important'
+      }}
     >
       {markers.map((marker) => (
         <>

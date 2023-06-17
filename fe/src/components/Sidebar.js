@@ -32,7 +32,7 @@ export default function Sidebar({ locations, onLocationSelect }) {
   );
 
   return (
-    <div className="absolute top-0 left-0 h-screen w-80 bg-white text-black p-4 overflow-auto shadow-lg z-20">
+    <div className="absolute top-0 left-0 h-screen w-96 bg-white text-black p-4 overflow-auto shadow-lg z-20">
       <SearchBar
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
