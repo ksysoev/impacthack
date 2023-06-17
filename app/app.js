@@ -2,14 +2,11 @@ const Redis = require('ioredis');
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
-const token = process.env.TELEGRAM_BOT_TOKEN || 'Telegram Token';
 
-const bot = new TelegramBot(token, { polling: true });
 const redisClient = new Redis(redis_uri);
 
 app.use(bodyParser.json());
@@ -50,7 +47,7 @@ app.get('/shops', async (req, res) => {
 // Register a new shop
 app.post('/shops', async (req, res) => {
   try {
-    const { shopId, shopName, latitude, longitude, products, telegramUsername, chatId } = req.body;
+    const { shopId, shopName, latitude, longitude, products, telegramUsername, chatId, posts } = req.body;
 
     await redisClient.geoadd('shops', longitude, latitude, shopId);
 
@@ -60,12 +57,12 @@ app.post('/shops', async (req, res) => {
       longitude,
       products: JSON.stringify(products),
       telegramUsername, // Add the Telegram username to the shop details
-      chatId
+      chatId,
+      posts
     };
     await redisClient.hset(`shop:${shopId}`, shopDetails);
 
     await redisClient.zadd('shopNames', 0, shopName.toLowerCase());
-
     const categories = [...new Set(products.map((product) => product.category))];
     for (const category of categories) {
       await redisClient.sadd('categories', category);
@@ -273,40 +270,6 @@ app.get('/shops/range/:latitude/:longitude/:radius', async (req, res) => {
   }
 });
 
-// Trigger the bot to send a message
-app.post('/trigger-bot', async (req, res) => {
-  try {
-    const { shopId, message } = req.body;
-    const username = await redisClient.hget(`shop:${shopId}`, 'telegramUsername');
-    const chatId   = await redisClient.hget(`shop:${shopId}`, 'chatId');
-    if (!username || !chatId) {
-      res.status(404).json({ error: 'Shop chat ID or username not found' });
-      return;
-    }
-    const fullMessage = `Shop ID: ${shopId}\nUsername: ${username}\n\n${message}`;
-    await bot.sendMessage(chatId, fullMessage);
-    res.status(200).json({ message: 'Message sent successfully' });
-  } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Failed to send message' });
-  }
-});
-
-// Listen for incoming messages
-bot.onText(/\/shop (\d+) (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const shopId = match[1];
-  const description = match[2];
-
-  try {
-    await redisClient.hset(`shop:${shopId}`, 'description', description);
-    await bot.sendMessage(chatId, 'Shop description updated successfully');
-  } catch (error) {
-    console.error('Error updating shop description:', error);
-    await bot.sendMessage(chatId, 'Failed to update shop description');
-  }
-});
-
 // Serve the home page
 app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -318,10 +281,6 @@ app.listen(port, () => {
 });
 
 // Helper functions
-
-TelegramBot.prototype.getChatId = function(shopId) {
-  return redisClient.hget(`shop:${shopId}`, 'chatId');
-};
 
 function parseShop(rawShop) {
 	rawShop.photos = safeParseJSON(rawShop.photos) || [];

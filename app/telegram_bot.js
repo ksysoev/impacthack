@@ -1,15 +1,26 @@
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
-const botToken = process.env.BOT_TOKEN;
-const apiKeyGPT = process.env.GPT_TOKEN;
+const Redis = require('ioredis');
+
+const botToken = process.env.BOT_TOKEN  || '6109822622:AAGFxH28qye0ZdHxu_eUp-EuiQD7pHgMMVM';
+const apiKeyGPT = process.env.GPT_TOKEN || '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';
+const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const bot = new TelegramBot(botToken, { polling: true });
+const redisClient = new Redis(redis_uri);
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const message = msg.text.toLowerCase();
+    console.log(message);
+    const shopId = 'YOUR_SHOP_ID'; //TODO get shopId
+    const shopInformation = await redisClient.hgetall(`shop:${shopId}`);
 
-    // TODO add logic to get shop information from redis
+    if (!shopInformation) {
+        bot.sendMessage(chatId, 'Shop information not found');
+        return;
+    }
+
     const shopInformation = {"rating":"4","address":"18, Jalan 4/23b, Taman Danau Kota, 53300 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur","logo":"","latitude":"3.2081691","phone":"+60 16-244 1991","pay_by_card":"true","brands":["Alfa Romeo","Acura","Buick"],"products":{"Seats":"Interior and Exterior Components","Fuel Tank":"Fuel System Components","Sensors (Oxygen Sensor, Mass Air Flow Sensor, etc.)":"Electrical Components","Windows and Windshields":"Interior and Exterior Components","Switches":"Electrical Components","Exterior Trim":"Interior and Exterior Components","Brake Lines":"Braking System Components","Valves":"Engine Components","Brake Discs/Rotors":"Braking System Components","Steering Rack":"Suspension and Steering Components"},"photos":["https://lh5.googleusercontent.com/p/AF1QipOHftDQ8DbpggQ_tOimPJHNXYo0cegRGFC14xta=w800-h500-k-no","https://lh5.googleusercontent.com/p/AF1QipOHftDQ8DbpggQ_tOimPJHNXYo0cegRGFC14xta=w1600-h1000-k-no"],"reliability":"5","category":"Car Wash","longitude":"101.7180254","working_hours":{"Monday":"9:30 am-7:30 pm","Tuesday":"9:30 am-7:30 pm","Wednesday":"9:30 am-7:30 pm","Thursday":"9:30 am-7:30 pm","Friday":"9:30 am-7:30 pm","Saturday":"9:30 am-7:30 pm","Sunday":"9:30 am-7:30 pm"},"shopName":"Danau Air Cond & Accessories Auto Works"};
     resp =  await classifyMessage(message, shopInformation);
 
@@ -23,17 +34,26 @@ bot.on('message', async (msg) => {
                 reply = `Here you can see the information about the shop:\n ${printShopInformation(shopInformation)}`;
                 break;
             case 'update':
-                let resp =await parseResponse(message, shopInformation)
-
+                let resp = await parseResponse(message, shopInformation)
                 if(!resp) {
                     reply = `Sorry, I did not understand your message. Please try again.`;
                     break;
                 }
-
+                redisClient.hmset(`shop:${shopId}`, resp, (err) => {
+                    if (err) {
+                        console.error('Error updating shop information in Redis:', err);
+                    }
+                });
                 reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${printShopInformation(resp)}`;
                 break;
             case 'news':
                 post = await generataPost(message, shopInformation);
+                console.log(post);
+                redisClient.hset(`shop:${shopId}`, 'post', post, (err, result) => {
+                    if (err) {
+                        console.error('Error storing post in Redis:', err);
+                    }
+                });
                 reply = `Thank you for your news. We posted it on our website: ${post}`;
                 break;
             case 'request':
