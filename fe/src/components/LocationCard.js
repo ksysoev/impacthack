@@ -120,14 +120,16 @@ export default function LocationCard({ onClose }) {
             Visit Store
           </a>
         </div>
-        <div className="mt-4 w-full">
-          <img
-            className="rounded-lg"
-            src={selectedLocation.photos[0]} // Use the first photo from the photos array
-            alt="Store Image"
-            objectFit="cover"
-          />
-        </div>
+        {selectedLocation.photos.length > 0 && (
+          <div className="mt-4 w-full">
+            <img
+              className="rounded-lg"
+              src={selectedLocation.photos[0]} // Use the first photo from the photos array
+              alt="Store Image"
+              objectFit="cover"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
