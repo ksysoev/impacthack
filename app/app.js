@@ -6,8 +6,14 @@ const path = require('path');
 const app = express();
 const port = process.env.APP_PORT || 8000;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
+
 const redisClient = new Redis(redis_uri);
 
+// Enabling CORS
+app.use(function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  next();
+});
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -46,7 +52,7 @@ app.get('/shops', async (req, res) => {
 // Register a new shop
 app.post('/shops', async (req, res) => {
   try {
-    const { shopId, shopName, latitude, longitude, products } = req.body;
+    const { shopId, shopName, latitude, longitude, products, telegramUsername, chatId, posts } = req.body;
 
     await redisClient.geoadd('shops', longitude, latitude, shopId);
 
@@ -55,11 +61,13 @@ app.post('/shops', async (req, res) => {
       latitude,
       longitude,
       products: JSON.stringify(products),
+      telegramUsername, // Add the Telegram username to the shop details
+      chatId,
+      posts
     };
     await redisClient.hset(`shop:${shopId}`, shopDetails);
 
     await redisClient.zadd('shopNames', 0, shopName.toLowerCase());
-
     const categories = [...new Set(products.map((product) => product.category))];
     for (const category of categories) {
       await redisClient.sadd('categories', category);
@@ -72,8 +80,6 @@ app.post('/shops', async (req, res) => {
     res.status(500).json({ error: 'Failed to register shop' });
   }
 });
-
-
 
 // The search function is an controller that searches for shops based on the specified search criteria.
 
@@ -156,7 +162,7 @@ app.get('/search', async (req, res) => {
 
     results.sort(sorters[sortby]).map((result) => result.shop);
 
-    res.status(200).json({ shops: results[0] });
+    res.status(200).json({ shops: results });
   } catch (error) {
     console.error('Error searching for shops:', error);
     res.status(500).json({ error: 'Failed to search for shops' });
@@ -279,7 +285,6 @@ app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
 
-
 // Helper functions
 
 function parseShop(rawShop) {
@@ -287,6 +292,5 @@ function parseShop(rawShop) {
 	rawShop.products = safeParseJSON(rawShop.products) || {};
 	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
     rawShop.brands = safeParseJSON(rawShop.brands) || [];
-
 	return rawShop;
 }

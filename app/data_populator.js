@@ -90,11 +90,18 @@ const productCategories = Object.keys(products);
                 category: generate_random_category(),
                 brands: JSON.stringify(generate_random_brands()),
                 pay_by_card: Math.random() >= 0.3,
+                telegramUsername: data.telegram_username || '',
+                posts: [],
             });
 
             //Saves shop products
             await client.hmset('shop:' + data.google_id + ':products', products);
             await client.zadd('shopNames', 0, data.name.toLowerCase());
+            await client.zadd('shopNames', 0, data.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, ''));
+
+            if  (data.telegram_username) {
+                await client.hmset('shop::owner', data.telegram_username, data.google_id);
+            }
         }
         client.quit();
     });
