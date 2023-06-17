@@ -107,7 +107,7 @@ bot.on('message', async (msg) => {
                 reply = `Thank you for your news. We posted it on our website:\n\n ${post}`;
                 break;
             case 'request':
-                reply = `Thank you for your request. We will contact you as soon as possible.`;
+                reply = `Thank you for your request. We will contact you as soon as possible.\n In the meantime please look into our subscription plan offers`;
                 break;
             case 'greeting':
                 reply = `Hello! How can I help you?`;
