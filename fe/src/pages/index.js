@@ -47,6 +47,7 @@ export default function Home() {
             latitude: parseFloat(shop.latitude),
             longitude: parseFloat(shop.longitude),
             working_hours: shop.working_hours,
+            reliability: shop.reliability,
             categories,
             photos,
             logo,
