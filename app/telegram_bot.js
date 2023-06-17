@@ -264,16 +264,16 @@ function printShopInformation(shop) {
         openingHoursString += `  ${day}: ${working_hours[day]}\n`;
     }
 
-    brandsString = brands.join(', ');
+    brandsString = (brands).join(', ');
 
-    return `Shop name: ${shopName}
-Address: ${address}
-Phone number: ${phoneNumber || 'not provided'}
-Website: ${website || 'not provided'}
-Opening hours: ${openingHoursString}
-Brands: ${brandsString}
-Can pay with card: ${pay_by_card ? 'Yes' : 'No'}`;
-}
+    return `Shop name:\n ${shopName}\n
+Address:\n ${address}\n
+Phone number:\n ${phoneNumber || 'not provided'}\n
+Website:\n ${website || 'not provided'}\n
+Opening hours:\n ${openingHoursString}\n
+Brands:\n ${brandsString}\n
+Can pay with card:\n ${pay_by_card ? 'Yes' : 'No'}`;
+}j
 
 function parseShop(rawShop) {
     rawShop.photos = safeParseJSON(rawShop.photos) || [];
