@@ -4,9 +4,11 @@ import {
   InfoWindow,
   useLoadScript,
 } from "@react-google-maps/api";
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocation, clearLocation } from "@/store/reducers/locationSlice";
+import Image from "next/image";
+import Logo from "../../src/assets/TEMPLOGO.png";
 
 const mapContainerStyle = {
   width: "auto",
@@ -69,24 +71,29 @@ export default function Map({ locations, onLocationSelect }) {
   if (!isLoaded) return "Loading Maps";
 
   return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      zoom={12}
-      center={center}
-      options={options}
-      onClick={handleInfoWindowClose}
-      styles={{
-        width: 'auto !important'
-      }}
-    >
-      {markers.map((marker) => (
-        <>
-          <Marker
-            key={marker.id}
-            position={marker.position}
-            onClick={() => handleMarkerClick(marker)}
-          />
-          {/* {selectedMarker && selectedMarker.id === marker.id && (
+    <>
+      <Image
+        src={Logo}
+        width={120}
+        height={120}
+        alt="Logo"
+        className="absolute top-0 right-0 p-4 overflow-auto z-20"
+      />
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        zoom={12}
+        center={center}
+        options={options}
+        onClick={handleInfoWindowClose}
+      >
+        {markers.map((marker) => (
+          <>
+            <Marker
+              key={marker.id}
+              position={marker.position}
+              onClick={() => handleMarkerClick(marker)}
+            />
+            {/* {selectedMarker && selectedMarker.id === marker.id && (
             <InfoWindow
               position={marker.position}
               onCloseClick={handleInfoWindowClose}
@@ -111,14 +118,15 @@ export default function Map({ locations, onLocationSelect }) {
               </div>
             </InfoWindow>
           )} */}
-        </>
-      ))}
-      {selectedMarker && (
-        <Marker
-          position={selectedMarker.position}
-          onClick={handleInfoWindowClose}
-        />
-      )}
-    </GoogleMap>
+          </>
+        ))}
+        {selectedMarker && (
+          <Marker
+            position={selectedMarker.position}
+            onClick={handleInfoWindowClose}
+          />
+        )}
+      </GoogleMap>
+    </>
   );
 }
