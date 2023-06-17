@@ -14,22 +14,43 @@ bot.on('message', async (msg) => {
     const message = msg.text.toLowerCase();
     telegram_username = msg.from.username;
 
-    let shopId = await redisClient.hget('shop::owner', telegram_username);
-
-    if (!shopId) {
-        bot.sendMessage(chatId, 'Sorry we could not find your shop. Please register your shop first.');
+    let shopId;
+    try {
+        shopId = await redisClient.hget('shop::owner', telegram_username);
+    } catch (error) {
+        console.error('Error getting shop ID from Redis:', error);
+        bot.sendMessage(chatId, 'An error occurred. Please try again later.');
         return;
     }
 
-    let shopInformation = await redisClient.hgetall(`shop:${shopId}`);
+    if (!shopId) {
+        bot.sendMessage(chatId, 'Sorry, we could not find your shop. Please register your shop first.');
+        return;
+    }
+
+    let shopInformation;
+    try {
+        shopInformation = await redisClient.hgetall(`shop:${shopId}`);
+    } catch (error) {
+        console.error('Error getting shop information from Redis:', error);
+        bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+        return;
+    }
 
     if (!shopInformation) {
-        bot.sendMessage(chatId, 'Sorry we could not find your shop. Please register your shop first.');
+        bot.sendMessage(chatId, 'Sorry, we could not find your shop. Please register your shop first.');
         return;
     }
     shopInformation = parseShop(shopInformation);
-   
-    resp =  await classifyMessage(message, shopInformation);
+
+    let resp;
+    try {
+        resp = await classifyMessage(message, shopInformation);
+    } catch (error) {
+        console.error('Error classifying message with GPT:', error);
+        bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+        return;
+    }
 
     const regex = /Category:\s*(\w+)/;
     const match = resp.match(regex);
@@ -42,20 +63,46 @@ bot.on('message', async (msg) => {
                 reply = `Here you can see the information about the shop:\n ${printShopInformation(shopInformation)}`;
                 break;
             case 'update':
-                let resp = await parseResponse(message, shopInformation)
-                if(!resp) {
+                let updatedStructure;
+                try {
+                    updatedStructure = await parseResponse(message, shopInformation);
+                } catch (error) {
+                    console.error('Error parsing response with GPT:', error);
+                    bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+                    return;
+                }
+                if (!updatedStructure) {
                     reply = `Sorry, I did not understand your message. Please try again.`;
                     break;
                 }
-                display = printShopInformation(resp);
-                await redisClient.hmset(`shop:${shopId}`, serializeShop(resp));
+                display = printShopInformation(updatedStructure);
+                try {
+                    await redisClient.hmset(`shop:${shopId}`, serializeShop(updatedStructure));
+                } catch (error) {
+                    console.error('Error updating shop information in Redis:', error);
+                    bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+                    return;
+                }
                 reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${display}`;
                 break;
             case 'news':
-                post = await generataPost(message, shopInformation);
+                let post;
+                try {
+                    post = await generataPost(message, shopInformation);
+                } catch (error) {
+                    console.error('Error generating post with GPT:', error);
+                    bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+                    return;
+                }
                 shopInformation.posts.unshift(post);
                 display = printShopInformation(shopInformation);
-                await redisClient.hset(`shop:${shopId}`, serializeShop(shopInformation)) 
+                try {
+                    await redisClient.hset(`shop:${shopId}`, serializeShop(shopInformation));
+                } catch (error) {
+                    console.error('Error storing post in Redis:', error);
+                    bot.sendMessage(chatId, 'An error occurred. Please try again later.');
+                    return;
+                }
                 reply = `Thank you for your news. We posted it on our website: ${display}`;
                 break;
             case 'request':
@@ -80,9 +127,9 @@ bot.on('message', async (msg) => {
 });
 
 async function classifyMessage(response, currentStructure) {
-    const message = `I want to to classify user input into one of the following categories:
+    const message = `I want to classify user input into one of the following categories:
 
-    1. Update - Provide updated information for provided structure
+    1. Update - Provide updated information for the provided structure
     2. News - News about the shop, new products, new services, new promotions
     3. Request - Request for a service or help
     4. Greeting - Greeting
@@ -94,104 +141,120 @@ async function classifyMessage(response, currentStructure) {
 
     Structure:\n\n${JSON.stringify(currentStructure)}`;
 
-    const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
-        messages: [{"role": "user", "content": message}],
-        model: "gpt-3.5-turbo",
-        max_tokens: 1024,
-        n: 1,
-        stop: '\n\n',
-        temperature: 0.5,
-    }, {
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKeyGPT}`,
-        },
-    });
-
-    return data.choices[0].message.content;
+    try {
+        const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
+            messages: [{ role: 'user', content: message }],
+            model: 'gpt-3.5-turbo',
+            max_tokens: 1024,
+            n: 1,
+            stop: '\n\n',
+            temperature: 0.5,
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKeyGPT}`,
+            },
+        });
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error making API call to GPT:', error.response?.data || error.message);
+        throw error;
+    }
 }
 
 async function parseResponse(response, currentStructure) {
-    const message = `Parse the following response and add new information into existing structure. 
-    you MUST use only existing fields from provided sturcture
-    If new address was provided partially, you must use missed information from providede structure
+    const message = `Parse the following response and add new information into the existing structure. 
+    You MUST use only existing fields from the provided structure.
+    If new address was provided partially, you must use the missed information from the provided structure.
     
     Response:\n\n${response}
 
     Structure:\n\n${JSON.stringify(currentStructure)}`;
 
-    const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
-        messages: [{"role": "user", "content": message}],
-        model: "gpt-3.5-turbo",
-        max_tokens: 1024,
-        n: 1,
-        stop: '\n\n',
-        temperature: 0.5,
-    }, {
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKeyGPT}`,
-        },
-    });
-
-    const structuredResponse = data.choices[0].message.content;
-
     try {
-        updatedStructure = JSON.parse(structuredResponse);
-    } catch (error) {
-        console.error('Error parsing JSON:', error, structuredResponse);
-        return;
-    }
-
-    if (currentStructure.address !== updatedStructure.address) {
-        const coordinates = await getCoordinates(updatedStructure.address);;
-        if (coordinates) {
-            updatedStructure.latitude = coordinates.latitude;
-            updatedStructure.longitude = coordinates.longitude;
+        const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
+            messages: [{ role: 'user', content: message }],
+            model: 'gpt-3.5-turbo',
+            max_tokens: 1024,
+            n: 1,
+            stop: '\n\n',
+            temperature: 0.5,
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKeyGPT}`,
+            },
+        });
+        const structuredResponse = data.choices[0].message.content;
+        let updatedStructure;
+        try {
+            updatedStructure = JSON.parse(structuredResponse);
+        } catch (error) {
+            console.error('Error parsing JSON:', error, structuredResponse);
+            return;
         }
-    }
 
-    return updatedStructure;
+        if (currentStructure.address !== updatedStructure.address) {
+            const coordinates = await getCoordinates(updatedStructure.address);
+            if (coordinates) {
+                updatedStructure.latitude = coordinates.latitude;
+                updatedStructure.longitude = coordinates.longitude;
+            }
+        }
+
+        return updatedStructure;
+    } catch (error) {
+        console.error('Error making API call to GPT:', error.response?.data || error.message);
+        throw error;
+    }
 }
 
 async function generataPost(initialMessage, currentStructure) {
-    const message = `Parse the following client input and generate social media post from car workshop company. 
-    also you can use information about the shop from provided structure if it's needed.
+    const message = `Parse the following client input and generate a social media post from a car workshop company. 
+    You can also use information about the shop from the provided structure if needed.
     
     Input:\n\n${initialMessage}
 
     Structure:\n\n${JSON.stringify(currentStructure)}`;
 
-    const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
-        messages: [{"role": "user", "content": message}],
-        model: "gpt-3.5-turbo",
-        max_tokens: 1024,
-        n: 1,
-        stop: '\n\n',
-        temperature: 0.5,
-    }, {
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKeyGPT}`,
-        },
-    });
-
-    return data.choices[0].message.content;
+    try {
+        const { data } = await axios.post('https://api.openai.com/v1/chat/completions', {
+            messages: [{ role: 'user', content: message }],
+            model: 'gpt-3.5-turbo',
+            max_tokens: 1024,
+            n: 1,
+            stop: '\n\n',
+            temperature: 0.5,
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKeyGPT}`,
+            },
+        });
+        return data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error making API call to GPT:', error.response?.data || error.message);
+        throw error;
+    }
 }
 
 async function getCoordinates(address) {
     const url = `https://geocode.maps.co/search?q=${encodeURIComponent(address)}`;
-    const { data } = await axios.get(url);
 
-    if (!data.length || !data[0].geometry) {
-        return
+    try {
+        const { data } = await axios.get(url);
+        if (!data.length || !data[0].geometry) {
+            return;
+        }
+        const { lat, lng } = data[0].geometry.location;
+        return { latitude: lat, longitude: lng };
+    } catch (error) {
+        console.error('Error getting coordinates:', error.response?.data || error.message);
+        throw error;
     }
-  
-    const { lat, lng } = data[0].geometry.location;
-  
-    return { latitude: lat, longitude: lng };
 }
 
+// Other functions remain the same...
 function printShopInformation(shop) {
     const { shopName, address, phoneNumber, website, working_hours, brands, pay_by_card } = shop;
 
@@ -200,36 +263,36 @@ function printShopInformation(shop) {
         openingHoursString += `  ${day}: ${working_hours[day]}\n`;
     }
 
-    brandsString = (brands).join(', ');
+    brandsString = brands.join(', ');
 
-    return `Shop name:\n ${shopName}\n
-Address:\n ${address}\n
-Phone number:\n ${phoneNumber || 'not provided'}\n
-Website:\n ${website || 'not provided'}\n
-Opening hours:\n ${openingHoursString}\n
-Brands:\n ${brandsString}\n
-Can pay with card:\n ${pay_by_card ? 'Yes' : 'No'}`;
+    return `Shop name: ${shopName}
+Address: ${address}
+Phone number: ${phoneNumber || 'not provided'}
+Website: ${website || 'not provided'}
+Opening hours: ${openingHoursString}
+Brands: ${brandsString}
+Can pay with card: ${pay_by_card ? 'Yes' : 'No'}`;
 }
 
 function parseShop(rawShop) {
-	rawShop.photos = safeParseJSON(rawShop.photos) || [];
-	rawShop.products = safeParseJSON(rawShop.products) || {};
-	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
+    rawShop.photos = safeParseJSON(rawShop.photos) || [];
+    rawShop.products = safeParseJSON(rawShop.products) || {};
+    rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
     rawShop.brands = safeParseJSON(rawShop.brands) || [];
     rawShop.posts = safeParseJSON(rawShop.posts) || [];
-	return rawShop;
+    return rawShop;
 }
 
 function safeParseJSON(jsonString) {
     if (!jsonString) {
-      return;
+        return null;
     }
 
     try {
         return JSON.parse(jsonString);
     } catch (error) {
         console.error('Error parsing JSON:', error, jsonString);
-        return;
+        return null;
     }
 }
 
@@ -238,6 +301,6 @@ function serializeShop(shop) {
     shop.products = JSON.stringify(shop.products || {});
     shop.working_hours = JSON.stringify(shop.working_hours || {});
     shop.brands = JSON.stringify(shop.brands || []);
-    shop.posts = JSON.stringify(shop.posts  || []);
+    shop.posts = JSON.stringify(shop.posts || []);
     return shop;
 }
