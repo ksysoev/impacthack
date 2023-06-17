@@ -2,8 +2,8 @@ const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 const Redis = require('ioredis');
 
-const botToken = process.env.BOT_TOKEN  || '6109822622:AAGFxH28qye0ZdHxu_eUp-EuiQD7pHgMMVM';
-const apiKeyGPT = process.env.GPT_TOKEN || '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';
+const botToken = process.env.BOT_TOKEN;
+const apiKeyGPT = process.env.GPT_TOKEN;
 const redis_uri = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const bot = new TelegramBot(botToken, { polling: true });
