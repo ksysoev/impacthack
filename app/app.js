@@ -160,7 +160,7 @@ app.get('/search', async (req, res) => {
 
     results.sort(sorters[sortby]).map((result) => result.shop);
 
-    res.status(200).json({ shops: results });
+    res.status(200).json({ shops: results[0] });
   } catch (error) {
     console.error('Error searching for shops:', error);
     res.status(500).json({ error: 'Failed to search for shops' });
