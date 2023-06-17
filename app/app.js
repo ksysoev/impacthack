@@ -12,6 +12,11 @@ const token = process.env.TELEGRAM_BOT_TOKEN || 'Telegram Token';
 const bot = new TelegramBot(token, { polling: true });
 const redisClient = new Redis(redis_uri);
 
+// Enabling CORS
+app.use(function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  next();
+});
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
