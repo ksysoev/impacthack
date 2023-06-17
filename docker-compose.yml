@@ -16,6 +16,8 @@ services:
     environment:
       - APP_PORT=${APP_PORT:-8000}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - GPT_TOKEN=${GPT_TOKEN}
 
   caddy:
     container_name: caddy
