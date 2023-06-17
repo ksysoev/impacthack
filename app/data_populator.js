@@ -91,7 +91,7 @@ const productCategories = Object.keys(products);
                 brands: JSON.stringify(generate_random_brands()),
                 pay_by_card: Math.random() >= 0.3,
                 telegramUsername: data.telegram_username || '',
-                posts: [],
+                posts: JSON.stringify([]),
             });
 
             //Saves shop products

@@ -12,16 +12,23 @@ const redisClient = new Redis(redis_uri);
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const message = msg.text.toLowerCase();
-    console.log(message);
-    const shopId = 'YOUR_SHOP_ID'; //TODO get shopId
-    const shopInformation = await redisClient.hgetall(`shop:${shopId}`);
+    telegram_username = msg.from.username;
 
-    if (!shopInformation) {
-        bot.sendMessage(chatId, 'Shop information not found');
+    let shopId = await redisClient.hget('shop::owner', telegram_username);
+
+    if (!shopId) {
+        bot.sendMessage(chatId, 'Sorry we could not find your shop. Please register your shop first.');
         return;
     }
 
-    const shopInformation = {"rating":"4","address":"18, Jalan 4/23b, Taman Danau Kota, 53300 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur","logo":"","latitude":"3.2081691","phone":"+60 16-244 1991","pay_by_card":"true","brands":["Alfa Romeo","Acura","Buick"],"products":{"Seats":"Interior and Exterior Components","Fuel Tank":"Fuel System Components","Sensors (Oxygen Sensor, Mass Air Flow Sensor, etc.)":"Electrical Components","Windows and Windshields":"Interior and Exterior Components","Switches":"Electrical Components","Exterior Trim":"Interior and Exterior Components","Brake Lines":"Braking System Components","Valves":"Engine Components","Brake Discs/Rotors":"Braking System Components","Steering Rack":"Suspension and Steering Components"},"photos":["https://lh5.googleusercontent.com/p/AF1QipOHftDQ8DbpggQ_tOimPJHNXYo0cegRGFC14xta=w800-h500-k-no","https://lh5.googleusercontent.com/p/AF1QipOHftDQ8DbpggQ_tOimPJHNXYo0cegRGFC14xta=w1600-h1000-k-no"],"reliability":"5","category":"Car Wash","longitude":"101.7180254","working_hours":{"Monday":"9:30 am-7:30 pm","Tuesday":"9:30 am-7:30 pm","Wednesday":"9:30 am-7:30 pm","Thursday":"9:30 am-7:30 pm","Friday":"9:30 am-7:30 pm","Saturday":"9:30 am-7:30 pm","Sunday":"9:30 am-7:30 pm"},"shopName":"Danau Air Cond & Accessories Auto Works"};
+    let shopInformation = await redisClient.hgetall(`shop:${shopId}`);
+
+    if (!shopInformation) {
+        bot.sendMessage(chatId, 'Sorry we could not find your shop. Please register your shop first.');
+        return;
+    }
+    shopInformation = parseShop(shopInformation);
+   
     resp =  await classifyMessage(message, shopInformation);
 
     const regex = /Category:\s*(\w+)/;
@@ -39,21 +46,13 @@ bot.on('message', async (msg) => {
                     reply = `Sorry, I did not understand your message. Please try again.`;
                     break;
                 }
-                redisClient.hmset(`shop:${shopId}`, resp, (err) => {
-                    if (err) {
-                        console.error('Error updating shop information in Redis:', err);
-                    }
-                });
+                await redisClient.hmset(`shop:${shopId}`, serializeShop(resp));
                 reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${printShopInformation(resp)}`;
                 break;
             case 'news':
                 post = await generataPost(message, shopInformation);
-                console.log(post);
-                redisClient.hset(`shop:${shopId}`, 'post', post, (err, result) => {
-                    if (err) {
-                        console.error('Error storing post in Redis:', err);
-                    }
-                });
+                shopInformation.posts.unshift(post);
+                await redisClient.hset(`shop:${shopId}`, serializeShop(shopInformation)) 
                 reply = `Thank you for your news. We posted it on our website: ${post}`;
                 break;
             case 'request':
@@ -192,11 +191,50 @@ async function getCoordinates(address) {
 
 function printShopInformation(shop) {
     const { shopName, address, phoneNumber, website, working_hours, brands, pay_by_card } = shop;
-    return `Shop name: ${shopName}
-    Address: ${address}
-    Phone number: ${phoneNumber || 'not provided'}
-    Website: ${website || 'not provided'}
-    Opening hours: ${working_hours}
-    Brands: ${brands}
-    Can pay with card: ${pay_by_card ? 'Yes' : 'No'}`;
+
+    let openingHoursString = '';
+    for (const day in working_hours) {
+        openingHoursString += `  ${day}: ${working_hours[day]}\n`;
+    }
+
+    brandsString = brands.join(', ');
+
+    return `Shop name:\n ${shopName}\n
+Address:\n ${address}\n
+Phone number:\n ${phoneNumber || 'not provided'}\n
+Website:\n ${website || 'not provided'}\n
+Opening hours:\n ${openingHoursString}\n
+Brands:\n ${brandsString}\n
+Can pay with card:\n ${pay_by_card ? 'Yes' : 'No'}`;
+}
+
+function parseShop(rawShop) {
+	rawShop.photos = safeParseJSON(rawShop.photos) || [];
+	rawShop.products = safeParseJSON(rawShop.products) || {};
+	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
+    rawShop.brands = safeParseJSON(rawShop.brands) || [];
+    rawShop.posts = safeParseJSON(rawShop.posts) || [];
+	return rawShop;
+}
+
+function safeParseJSON(jsonString) {
+    if (!jsonString) {
+      return;
+    }
+
+    try {
+        return JSON.parse(jsonString);
+    } catch (error) {
+        console.error('Error parsing JSON:', error, jsonString);
+        return;
+    }
+}
+
+function serializeShop(shop) {
+    shop.photos = JSON.stringify(shop.photos);
+    shop.products = JSON.stringify(shop.products);
+    shop.working_hours = JSON.stringify(shop.working_hours);
+    shop.brands = JSON.stringify(shop.brands);
+    shop.posts = JSON.stringify(shop.posts);
+    return shop;
 }
