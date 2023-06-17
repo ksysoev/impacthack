@@ -13,7 +13,6 @@ const mapContainerStyle = {
   height: "100vh",
 };
 
-
 const options = {
   disableDefaultUI: true,
   zoomControl: true,
@@ -24,9 +23,8 @@ export default function Map({ locations, onLocationSelect }) {
   const selectedLocation = useSelector((state) => state.location);
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
-  ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
-  : { lat: 5.2257767, lng: 100.4426336 }; // Default center is Malaysia
-
+    ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
+    : { lat: 5.2257767, lng: 100.4426336 }; // Default center is Malaysia
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
@@ -35,15 +33,12 @@ export default function Map({ locations, onLocationSelect }) {
   const handleMarkerClick = (marker) => {
     dispatch(setLocation(marker.location));
     onLocationSelect(marker.location);
-
   };
 
   const handleInfoWindowClose = () => {
     dispatch(clearLocation());
     onLocationSelect(null);
   };
-
-  
 
   useEffect(() => {
     if (isLoaded) {
@@ -69,11 +64,14 @@ export default function Map({ locations, onLocationSelect }) {
       onClick={() => handleInfoWindowClose()}
     >
       {markers.map((marker) => (
-        <Marker
-          key={marker.id}
-          position={marker.position}
-          onClick={() => handleMarkerClick(marker)}
-        />
+        <>
+          {console.log(marker)}
+          <Marker
+            key={marker.id}
+            position={marker.position}
+            onClick={() => handleMarkerClick(marker)}
+          />
+        </>
       ))}
     </GoogleMap>
   );

@@ -3,6 +3,8 @@ import close from "../../public/icons/close.png";
 import { useDispatch, useSelector } from "react-redux";
 import { clearLocation } from "../store/reducers/locationSlice";
 import workshop from "../../public/images/workshop.jpg";
+import whatsapp from "../../public/icons/whatsapp.png";
+import messenger from "../../public/icons/messenger.png";
 
 export default function LocationCard({ onClose }) {
   const dispatch = useDispatch();
@@ -18,9 +20,14 @@ export default function LocationCard({ onClose }) {
     console.log("Image clicked");
   };
 
+  const uniqueCategories = [...new Set(selectedLocation.categories)];
+
+
   return (
-    <div className="absolute top-0 left-80 h-auto w-80 p-2 overflow-auto z-20">
-      <div className="bg-white text-black h-full rounded-lg p-5 shadow-lg">
+    <div className="absolute top-0 left-80 h-full w-80 p-2 overflow-hidden z-20">
+      <div className="bg-white text-black rounded-lg p-5 shadow-lg h-full overflow-auto">
+        {/* <div className="absolute top-0 left-80 h-auto w-80 p-2 overflow-auto z-20">
+      <div className="bg-white text-black rounded-lg p-5 shadow-lg"> */}
         <button
           className="absolute top-0 right-0 mr-6 mt-6"
           onClick={handleClose}
@@ -32,10 +39,10 @@ export default function LocationCard({ onClose }) {
         </h2>
         <p className="mt-2 text-black">{selectedLocation.description}</p>
         <div className="flex flex-wrap gap-2 mt-4">
-          {selectedLocation.categories.map((category) => (
+          {uniqueCategories.map((category) => (
             <p
               key={category}
-              className="py-1 px-2 rounded-lg text-sm font-thin outline outline-1 bg-white"
+              className="py-1 px-2 rounded-full text-sm font-thin bg-gray-500 text-white"
             >
               {category}
             </p>
@@ -51,7 +58,12 @@ export default function LocationCard({ onClose }) {
           </a>
         </div>
         <div className="mt-4 w-full">
-          <Image src={workshop} alt="Store Image" objectFit="cover" />
+          <Image
+            className=" rounded-lg"
+            src={workshop}
+            alt="Store Image"
+            objectFit="cover"
+          />
         </div>
         <div className="mt-4">
           <h3 className="text-lg text-black font-bold mb-2">Highlights</h3>
@@ -76,21 +88,11 @@ export default function LocationCard({ onClose }) {
         </div>
         <div className="mt-6">
           <button className="flex items-center justify-center bg-blue-600 text-sm text-white px-4 py-2 rounded-lg w-full mb-2">
-            <Image
-              src="/path-to-facebook-icon"
-              alt="Facebook Icon"
-              width={20}
-              height={20}
-            />
+            <Image src={messenger} alt="Facebook Icon" width={20} height={20} />
             <span className="ml-2">Chat with Messenger</span>
           </button>
           <button className="flex items-center justify-center bg-green-500 text-sm text-white px-4 py-2 rounded-lg w-full">
-            <Image
-              src="/path-to-whatsapp-icon"
-              alt="WhatsApp Icon"
-              width={20}
-              height={20}
-            />
+            <Image src={whatsapp} alt="WhatsApp Icon" width={20} height={20} />
             <span className="ml-2">Chat with WhatsApp</span>
           </button>
         </div>
