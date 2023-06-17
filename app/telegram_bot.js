@@ -19,12 +19,22 @@ bot.on('message', async (msg) => {
     if (match && match[1]) {
         const category = match[1].toLowerCase() || 'other';
         switch (category) {
+            case 'show':
+                reply = `Here you can see the information about the shop:\n ${printShopInformation(shopInformation)}`;
+                break;
             case 'update':
-                updated = await parseResponse(message, shopInformation)
-                reply = `Thank you for your update. We will update the information for ${updated.shopName} as soon as possible.`;
+                let resp =await parseResponse(message, shopInformation)
+
+                if(!resp) {
+                    reply = `Sorry, I did not understand your message. Please try again.`;
+                    break;
+                }
+
+                reply = `Thank you for your update. We updated the information for you. Here you can see the updated information: ${printShopInformation(resp)}`;
                 break;
             case 'news':
-                reply = await generataPost(message, shopInformation);
+                post = await generataPost(message, shopInformation);
+                reply = `Thank you for your news. We posted it on our website: ${post}`;
                 break;
             case 'request':
                 reply = `Thank you for your request. We will contact you as soon as possible.`;
@@ -55,6 +65,7 @@ async function classifyMessage(response, currentStructure) {
     3. Request - Request for a service or help
     4. Greeting - Greeting
     5. Thanks - Client says thanks
+    6. Show - Request to show information about the shop
     6. Other - Other
     
     Input:\n\n${response}
@@ -148,7 +159,6 @@ async function generataPost(initialMessage, currentStructure) {
 
 async function getCoordinates(address) {
     const url = `https://geocode.maps.co/search?q=${encodeURIComponent(address)}`;
-    console.log('url', url);
     const { data } = await axios.get(url);
 
     if (!data.length || !data[0].geometry) {
@@ -158,4 +168,15 @@ async function getCoordinates(address) {
     const { lat, lng } = data[0].geometry.location;
   
     return { latitude: lat, longitude: lng };
+}
+
+function printShopInformation(shop) {
+    const { shopName, address, phoneNumber, website, working_hours, brands, pay_by_card } = shop;
+    return `Shop name: ${shopName}
+    Address: ${address}
+    Phone number: ${phoneNumber || 'not provided'}
+    Website: ${website || 'not provided'}
+    Opening hours: ${working_hours}
+    Brands: ${brands}
+    Can pay with card: ${pay_by_card ? 'Yes' : 'No'}`;
 }
