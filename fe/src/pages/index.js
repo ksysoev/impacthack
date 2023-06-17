@@ -98,13 +98,11 @@ export default function Home() {
               <></>
             )}
             <div className="w-full h-screen">
-              <div className="container h-full">
                 <Map
                   locations={locations}
                   selectedLocation={selectedLocation}
                   onLocationSelect={setSelectedLocation}
                 />
-              </div>
             </div>
           </div>
         </div>
