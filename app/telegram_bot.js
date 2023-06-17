@@ -232,7 +232,11 @@ async function generataPost(initialMessage, currentStructure) {
                 'Authorization': `Bearer ${apiKeyGPT}`,
             },
         });
-        return data.choices[0].message.content;
+
+        let date = new Date();
+        let options = { month: 'long', day: 'numeric' };
+        let formattedDate = date.toLocaleDateString('en-US', options);
+        return formattedDate + ": " + data.choices[0].message.content;
     } catch (error) {
         console.error('Error making API call to GPT:', error.response?.data || error.message);
         throw error;
