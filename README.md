@@ -41,3 +41,26 @@ curl http://localhost:8000/categories
 ```bash
 curl http://localhost:8000/shops/range/51.1234/-0.9876/5
 ```
+
+
+## Search
+
+The search function is an controller that searches for shops based on the specified search criteria.
+
+Request
+The search function expects a GET request with the following query parameters:
+
+- latitude (required): The latitude of the user's location.
+- longitude (required): The longitude of the user's location.
+- radius (optional): The search radius in kilometers (default is 10km).
+- category (optional): The category of the shops to search for.
+- name (optional): The name of the shops to search for.
+- sortby (optional): The field to sort the search results by, possible values distance, rating, reliability (default is distance).
+- pay_by_card (optional): Whether the shop accepts card payments.
+- product (optional): The product to search for.
+- brand (optional): The brand to search for.
+
+
+```bash
+curl 'http://localhost:8000/search?longitude=101.7309175&latitude=3.223186&radius=10&sortby=distance&brand=bmw&pay_by_card=1'
+```
