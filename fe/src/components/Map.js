@@ -36,7 +36,7 @@ export default function Map({ locations, onLocationSelect }) {
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
     : { lat: 5.2257767, lng: 100.4426336 };
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
+    googleMapsApiKey: "", // Exposing it for dev
   });
 
   const [selectedMarker, setSelectedMarker] = useState(null);
