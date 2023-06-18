@@ -1,4 +1,7 @@
-# impacthack
+# Impacthack -- Vroom Lah
+
+## What is the project about ?
+We have built a data aggregator website that is aimed towards automotive SME's. The goal is to act as gateway to help build them build digital social presence with ease using our chatbot services.  
 
 ## Register a shop:
 
