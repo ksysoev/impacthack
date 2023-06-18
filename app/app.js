@@ -291,6 +291,7 @@ function parseShop(rawShop) {
 	rawShop.photos = safeParseJSON(rawShop.photos) || [];
 	rawShop.products = safeParseJSON(rawShop.products) || {};
 	rawShop.working_hours = safeParseJSON(rawShop.working_hours) || {};
-    rawShop.brands = safeParseJSON(rawShop.brands) || [];
+  rawShop.brands = safeParseJSON(rawShop.brands) || [];
+  rawShop.posts = safeParseJSON(rawShop.posts) || [];
 	return rawShop;
 }

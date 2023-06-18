@@ -16,6 +16,26 @@ services:
     environment:
       - APP_PORT=${APP_PORT:-8000}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - GPT_TOKEN=${GPT_TOKEN}
+    command: ["npm", "start"]
+
+  bot:
+    container_name: bot
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    volumes:
+      - "./app:/usr/src/app"
+    depends_on:
+      - redis
+    environment:
+      - APP_PORT=${APP_PORT:-8000}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - GPT_TOKEN=${GPT_TOKEN}
+    command: ["npm", "run", "bot"]
 
   caddy:
     container_name: caddy
