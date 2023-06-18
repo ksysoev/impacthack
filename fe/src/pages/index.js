@@ -4,6 +4,7 @@ import Map from "../components/Map";
 import Sidebar from "../components/Sidebar";
 import Head from "next/head";
 import Script from "next/script";
+import Feed from "@/components/Feed";
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -12,7 +13,9 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://157.245.51.217:8000/shops");
+        const response = await fetch(
+          "https://ocrtynfrqk.execute-api.ap-southeast-1.amazonaws.com/dev"
+        );
         const data = await response.json();
         const categoryMapping = {
           "Suspension and Steering Components": "Suspension",
@@ -29,16 +32,29 @@ export default function Home() {
           "Accessories and Fluids": "Accessories/Fluids",
           "Tools and Equipment": "Tools/Equipment",
         };
-        const formattedLocations = data.map((shop) => ({
-          id: shop.shopName,
-          name: shop.shopName,
-          description: shop.address,
-          latitude: parseFloat(shop.latitude),
-          longitude: parseFloat(shop.longitude),
-          categories: Object.values(shop.products).map((category) =>
-            categoryMapping[category] || category
-          ),
-        }));
+
+        const formattedLocations = data.map((shop) => {
+          const photos = shop.photos || [];
+          const logo = shop.logo || "";
+          const categories = Object.values(shop.products).map(
+            (category) => categoryMapping[category] || category
+          );
+          const posts = shop.posts || []; // Add this line to handle the posts data
+          return {
+            id: shop.shopName,
+            name: shop.shopName,
+            description: shop.address,
+            latitude: parseFloat(shop.latitude),
+            longitude: parseFloat(shop.longitude),
+            working_hours: shop.working_hours,
+            reliability: shop.reliability,
+            brands: shop.brands,
+            categories,
+            photos,
+            logo,
+            posts, // Include the posts data in the formatted location object
+          };
+        });
 
         setLocations(formattedLocations);
       } catch (error) {
@@ -48,34 +64,6 @@ export default function Home() {
 
     fetchData();
   }, []);
-  
-  // const locations = [
-  //   // Replace with your actual data
-  //   {
-  //     id: 1,
-  //     name: "High Beam Accessories",
-  //     description: "We sell parts you need to keep flashing cars on the right lane.",
-  //     latitude: 5.2257767,
-  //     longitude: 100.4426336,
-  //     categories: ["Accessories", "Parts"],
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Gasket Blown Workshop",
-  //     description: "Engine problem? No problem, we'll fix it for an affordable price.",
-  //     latitude: 5.2257767,
-  //     longitude: 100.4466336,
-  //     categories: ["Service", "Repair"],
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Towed Tuning",
-  //     description: "We tune your car to the max performance it can perform. We provide Dyno and Remap services",
-  //     latitude: 5.2257767,
-  //     longitude: 100.4486336,
-  //     categories: ["Tuning", "Performance"],
-  //   },
-  // ];
 
   return (
     <>
@@ -90,21 +78,25 @@ export default function Home() {
           </div>
           <div className="flex-grow">
             {selectedLocation ? (
-              <LocationCard
-                location={selectedLocation}
+              <>
+                <LocationCard
+                  location={selectedLocation}
+                  onClose={() => setSelectedLocation(null)}
+                />
+                <Feed
+                location={selectedLocation["posts"]}
                 onClose={() => setSelectedLocation(null)}
-              />
+                />
+              </>
             ) : (
               <></>
             )}
             <div className="w-full h-screen">
-              <div className="container h-full">
-                <Map
-                  locations={locations}
-                  selectedLocation={selectedLocation}
-                  onLocationSelect={setSelectedLocation}
-                />
-              </div>
+              <Map
+                locations={locations}
+                selectedLocation={selectedLocation}
+                onLocationSelect={setSelectedLocation}
+              />
             </div>
           </div>
         </div>

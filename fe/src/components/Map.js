@@ -6,10 +6,12 @@ import {
 } from "@react-google-maps/api";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setLocation, clearLocation } from "@/store/reducers/locationSlice";
+import { setLocation,setZoomMarker, clearLocation } from "@/store/reducers/locationSlice";
+import Image from "next/image";
+import Logo from "../../src/assets/TEMPLOGO.png";
 
 const mapContainerStyle = {
-  width: "100vw",
+  width: "auto",
   height: "100vh",
 };
 
@@ -30,13 +32,15 @@ const options = {
 
 export default function Map({ locations, onLocationSelect }) {
   const dispatch = useDispatch();
-  const selectedLocation = useSelector((state) => state.location);
+  const selectedLocation = useSelector((state) => state.vroom.location);
+  const zoomMarker = useSelector((state) => state.vroom.zoomMarker);
+
   const [markers, setMarkers] = useState([]);
   const center = selectedLocation
     ? { lat: selectedLocation.latitude, lng: selectedLocation.longitude }
-    : { lat: 5.2257767, lng: 100.4426336 };
+    : { lat: 3.139003, lng: 101.686855 };
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Exposing it for dev
+    googleMapsApiKey: "AIzaSyBvvqrAP6nZLVQfvn4HiHYja_vhL41hEEA", // Replace with your Google Maps API key
   });
 
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -44,12 +48,12 @@ export default function Map({ locations, onLocationSelect }) {
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
     dispatch(setLocation(marker.location));
+    dispatch(setZoomMarker(16))
     onLocationSelect(marker.location);
   };
 
   const handleInfoWindowClose = () => {
     setSelectedMarker(null);
-    dispatch(clearLocation());
     onLocationSelect(null);
   };
 
@@ -69,21 +73,29 @@ export default function Map({ locations, onLocationSelect }) {
   if (!isLoaded) return "Loading Maps";
 
   return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      zoom={8}
-      center={center}
-      options={options}
-      onClick={() => handleInfoWindowClose()}
-    >
-      {markers.map((marker) => (
-        <>
-          <Marker
-            key={marker.id}
-            position={marker.position}
-            onClick={() => handleMarkerClick(marker)}
-          />
-          {selectedMarker && selectedMarker.id === marker.id && (
+    <>
+      <Image
+        src={Logo}
+        width={120}
+        height={120}
+        alt="Logo"
+        className="absolute top-0 right-0 p-4 overflow-auto z-20"
+      />
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        zoom={12}
+        center={center}
+        options={options}
+        onClick={handleInfoWindowClose}
+      >
+        {markers.map((marker) => (
+          <>
+            <Marker
+              key={marker.id}
+              position={marker.position}
+              onClick={() => handleMarkerClick(marker)}
+            />
+            {/* {selectedMarker && selectedMarker.id === marker.id && (
             <InfoWindow
               position={marker.position}
               onCloseClick={handleInfoWindowClose}
@@ -105,12 +117,18 @@ export default function Map({ locations, onLocationSelect }) {
                     )}
                   </div>
                 </div>
-                {/* Additional information to display */}
               </div>
             </InfoWindow>
-          )}
-        </>
-      ))}
-    </GoogleMap>
+          )} */}
+          </>
+        ))}
+        {selectedMarker && (
+          <Marker
+            position={selectedMarker.position}
+            onClick={handleInfoWindowClose}
+          />
+        )}
+      </GoogleMap>
+    </>
   );
 }

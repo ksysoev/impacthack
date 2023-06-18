@@ -1,33 +1,64 @@
 import Image from "next/image";
 import close from "../../public/icons/close.png";
-import { useDispatch, useSelector } from "react-redux";
-import { clearLocation } from "../store/reducers/locationSlice";
-import workshop from "../../public/images/workshop.jpg";
-import whatsapp from "../../public/icons/whatsapp.png";
-import messenger from "../../public/icons/messenger.png";
+import { useSelector } from "react-redux";
 
 export default function LocationCard({ onClose }) {
-  const dispatch = useDispatch();
-  const selectedLocation = useSelector((state) => state.location);
+  const selectedLocation = useSelector((state) => state.vroom.location);
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const currentDate = new Date();
+  const currentDay = daysOfWeek[currentDate.getUTCDay()];
+  const currentHour = currentDate.getUTCHours() + 8; // Add 8 hours to convert to GMT+8
 
-  const handleClose = () => {
-    dispatch(clearLocation());
+  const handleClose = (event) => {
+    event.stopPropagation();
     onClose();
   };
 
   const handleImageClick = () => {
-    // Logic to handle image click and open the popup
     console.log("Image clicked");
   };
 
   const uniqueCategories = [...new Set(selectedLocation.categories)];
 
+  const getCurrentWorkingHours = () => {
+    const workingHours = selectedLocation.working_hours[currentDay];
+
+    if (workingHours) {
+      if (workingHours !== "Open 24 hours" && workingHours !== "Closed") {
+        const [openingHour, closingHour] = workingHours.split("-");
+        const openingTime = parseInt(openingHour.split(" ")[0]); // Split by non-breaking space
+        const closingTime = parseInt(closingHour.split(" ")[0]); // Split by non-breaking space
+
+        if (currentHour >= openingTime && currentHour < closingTime) {
+          return ["Open", workingHours];
+        } else {
+          return ["Closed", workingHours];
+        }
+      } else if (workingHours === "Open 24 hours") {
+        return "Open 24 Hours";
+      } else {
+        return "Closed";
+      }
+    } else {
+      return "Closed"; // Default to "Closed" if there are no working hours for the current day
+    }
+  };
+  const currentWorkingHours = getCurrentWorkingHours();
 
   return (
-    <div className="absolute top-0 left-80 h-full w-80 p-2 overflow-hidden z-20">
+    <div
+      className="absolute top-0 left-96 h-auto w-96 p-2 overflow-hidden z-20"
+      onClick={(event) => event.stopPropagation()}
+    >
       <div className="bg-white text-black rounded-lg p-5 shadow-lg h-full overflow-auto">
-        {/* <div className="absolute top-0 left-80 h-auto w-80 p-2 overflow-auto z-20">
-      <div className="bg-white text-black rounded-lg p-5 shadow-lg"> */}
         <button
           className="absolute top-0 right-0 mr-6 mt-6"
           onClick={handleClose}
@@ -48,6 +79,38 @@ export default function LocationCard({ onClose }) {
             </p>
           ))}
         </div>
+        {}
+        {selectedLocation.working_hours && (
+          <div className="mt-4">
+            <h3 className="text-lg text-black font-bold mb-2">Working Hours</h3>
+            <p className="text-black">
+              {Array.isArray(currentWorkingHours) ? (
+                <>
+                  {currentWorkingHours[0] === "Open" ? (
+                    <span className="text-green-500">
+                      {currentWorkingHours[0]}
+                    </span>
+                  ) : (
+                    <span className="text-red-500">
+                      {currentWorkingHours[0]}
+                    </span>
+                  )}
+                  &nbsp;-&nbsp;<span>{currentWorkingHours[1]}</span>
+                </>
+              ) : (
+                <>
+                  {currentWorkingHours === "Closed" ? (
+                    <span className="text-red-500">{currentWorkingHours}</span>
+                  ) : (
+                    <span className="text-green-500">
+                      {currentWorkingHours}
+                    </span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        )}
         <div className="mt-4">
           <h3 className="text-lg text-black font-bold mb-2">Store Links</h3>
           <a
@@ -57,45 +120,16 @@ export default function LocationCard({ onClose }) {
             Visit Store
           </a>
         </div>
-        <div className="mt-4 w-full">
-          <Image
-            className=" rounded-lg"
-            src={workshop}
-            alt="Store Image"
-            objectFit="cover"
-          />
-        </div>
-        <div className="mt-4">
-          <h3 className="text-lg text-black font-bold mb-2">Highlights</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {[1, 2].map((image) => (
-              <div
-                key={image}
-                className="relative cursor-pointer"
-                onClick={handleImageClick}
-              >
-                <div className="absolute inset-0 bg-gray-500 opacity-20 rounded-lg" />
-
-                <Image
-                  src={`/images/${image}.jpg`}
-                  alt={`Image ${image}`}
-                  width={200}
-                  height={200}
-                />
-              </div>
-            ))}
+        {selectedLocation.photos.length > 0 && (
+          <div className="mt-4 w-full">
+            <img
+              className="rounded-lg"
+              src={selectedLocation.photos[0]} // Use the first photo from the photos array
+              alt="Store Image"
+              objectFit="cover"
+            />
           </div>
-        </div>
-        <div className="mt-6">
-          <button className="flex items-center justify-center bg-blue-600 text-sm text-white px-4 py-2 rounded-lg w-full mb-2">
-            <Image src={messenger} alt="Facebook Icon" width={20} height={20} />
-            <span className="ml-2">Chat with Messenger</span>
-          </button>
-          <button className="flex items-center justify-center bg-green-500 text-sm text-white px-4 py-2 rounded-lg w-full">
-            <Image src={whatsapp} alt="WhatsApp Icon" width={20} height={20} />
-            <span className="ml-2">Chat with WhatsApp</span>
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
